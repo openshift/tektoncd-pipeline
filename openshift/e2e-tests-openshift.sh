@@ -181,7 +181,7 @@ function enable_docker_schema2(){
 function run_e2e_tests(){
   header "Running tests"
 
-#  export KO_DOCKER_REPO=registry.svc.ci.openshift.org/${OPENSHIFT_BUILD_NAMESPACE}
+  export KO_DOCKER_REPO=${INTERNAL_REGISTRY}/${OPENSHIFT_BUILD_NAMESPACE}
 
   options=""
   (( EMIT_METRICS )) && options="-emitmetrics"
