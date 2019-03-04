@@ -1,7 +1,5 @@
 # Do not edit! This file was generated via Makefile
 FROM registry.svc.ci.openshift.org/openshift/origin-v4.0:base
 
-RUN yum install -y git
-
-ADD ${bin} /usr/bin/${bin}
-ENTRYPOINT ["/usr/bin/${bin}"]
+ADD panic /usr/bin/panic
+ENTRYPOINT ["/usr/bin/panic"]
