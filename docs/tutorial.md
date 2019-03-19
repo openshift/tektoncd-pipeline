@@ -1,6 +1,6 @@
 # Hello World Tutorial
 
-Welcome to the Pipeline tutorial!
+Welcome to the Tekton Pipeline tutorial!
 
 This tutorial will walk you through creating and running some simple
 [`Task`](tasks.md), [`Pipeline`](pipelines.md) and running them by creating
@@ -11,11 +11,11 @@ This tutorial will walk you through creating and running some simple
 
 For more details on using `Pipelines`, see [our usage docs](README.md).
 
-**[This tutorial can be run on a local workstation](#local-development)**<br>
+**Note:** [This tutorial can be run on a local workstation](#local-development)
 
 ## Task
 
-The main objective of the Pipeline CRDs is to run your Task individually or as a
+The main objective of Tekton Pipelines is to run your Task individually or as a
 part of a Pipeline. Every task runs as a Pod on your Kubernetes cluster with
 each step as its own container.
 
@@ -23,7 +23,7 @@ A [`Task`](tasks.md) defines the work that needs to be executed, for example the
 following is a simple task that will echo hello world:
 
 ```yaml
-apiVersion: pipeline.knative.dev/v1alpha1
+apiVersion: tekton.dev/v1alpha1
 kind: Task
 metadata:
   name: echo-hello-world
@@ -43,7 +43,7 @@ A [`TaskRun`](taskruns.md) runs the `Task` you defined. Here is a simple example
 of a `TaskRun` you can use to execute your task:
 
 ```yaml
-apiVersion: pipeline.knative.dev/v1alpha1
+apiVersion: tekton.dev/v1alpha1
 kind: TaskRun
 metadata:
   name: echo-hello-world-task-run
@@ -69,7 +69,7 @@ kubectl get taskruns/echo-hello-world-task-run -o yaml
 You will get an output similar to the following:
 
 ```yaml
-apiVersion: pipeline.knative.dev/v1alpha1
+apiVersion: tekton.dev/v1alpha1
 kind: TaskRun
 metadata:
   creationTimestamp: 2018-12-11T15:49:13Z
@@ -77,7 +77,7 @@ metadata:
   name: echo-hello-world-task-run
   namespace: default
   resourceVersion: "6706789"
-  selfLink: /apis/pipeline.knative.dev/v1alpha1/namespaces/default/taskruns/echo-hello-world-task-run
+  selfLink: /apis/tekton.dev/v1alpha1/namespaces/default/taskruns/echo-hello-world-task-run
   uid: 4e96e9c6-fd5c-11e8-9129-42010a8a0fdc
 spec:
   generation: 1
@@ -96,15 +96,13 @@ status:
   podName: echo-hello-world-task-run-pod-85ca51
   startTime: 2018-12-11T15:49:39Z
   steps:
-    - logsURL: ""
-      terminated:
+    - terminated:
         containerID: docker://fcfe4a004...6729d6d2ad53faff41
         exitCode: 0
         finishedAt: 2018-12-11T15:50:01Z
         reason: Completed
         startedAt: 2018-12-11T15:50:01Z
-    - logsURL: ""
-      terminated:
+    - terminated:
         containerID: docker://fe86fc5f7...eb429697b44ce4a5b
         exitCode: 0
         finishedAt: 2018-12-11T15:50:02Z
@@ -129,7 +127,7 @@ The [`git` resource](resources.md#git-resource) represents a git repository with
 a specific revision:
 
 ```yaml
-apiVersion: pipeline.knative.dev/v1alpha1
+apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
   name: skaffold-git
@@ -146,7 +144,7 @@ The [`image` resource](resources.md#image-resource) represents the image to be
 built by the task:
 
 ```yaml
-apiVersion: pipeline.knative.dev/v1alpha1
+apiVersion: tekton.dev/v1alpha1
 kind: PipelineResource
 metadata:
   name: skaffold-image-leeroy-web
@@ -163,7 +161,7 @@ args of the task command support templating so that the definition of task is
 constant and the value of parameters can change in runtime.
 
 ```yaml
-apiVersion: pipeline.knative.dev/v1alpha1
+apiVersion: tekton.dev/v1alpha1
 kind: Task
 metadata:
   name: build-docker-image-from-git-source
@@ -201,7 +199,7 @@ sets values to the parameters used for templating in addition to executing the
 task steps.
 
 ```yaml
-apiVersion: pipeline.knative.dev/v1alpha1
+apiVersion: tekton.dev/v1alpha1
 kind: TaskRun
 metadata:
   name: build-docker-image-from-git-source-task-run
@@ -234,7 +232,7 @@ resources, the task and taskrun.
 kubectl apply -f <name-of-file.yaml>
 ```
 
-To see all the resource created so far as part of the Pipeline CRD, run the
+To see all the resource created so far as part of Tekton Pipelines, run the
 command:
 
 ```bash
@@ -258,13 +256,13 @@ tasks/build-docker-image-from-git-source   7m
 To see the output of the TaskRun, use the following command:
 
 ```bash
-kubectl get taskruns/echo-hello-world-task-run -o yaml
+kubectl get taskruns/build-docker-image-from-git-source-task-run -o yaml
 ```
 
 You will get an output similar to the following:
 
 ```yaml
-apiVersion: pipeline.knative.dev/v1alpha1
+apiVersion: tekton.dev/v1alpha1
 kind: TaskRun
 metadata:
   creationTimestamp: 2018-12-11T18:14:29Z
@@ -272,7 +270,7 @@ metadata:
   name: build-docker-image-from-git-source-task-run
   namespace: default
   resourceVersion: "6733537"
-  selfLink: /apis/pipeline.knative.dev/v1alpha1/namespaces/default/taskruns/build-docker-image-from-git-source-task-run
+  selfLink: /apis/tekton.dev/v1alpha1/namespaces/default/taskruns/build-docker-image-from-git-source-task-run
   uid: 99d297fd-fd70-11e8-9129-42010a8a0fdc
 spec:
   generation: 1
@@ -293,9 +291,6 @@ spec:
         paths: null
         resourceRef:
           name: skaffold-image-leeroy-web
-  results:
-    type: gcs
-    url: gcs://somebucket/results/logs #configure: remove results entirely if you're happy to use stdout
   taskRef:
     name: build-docker-image-from-git-source
   taskSpec: null
@@ -309,15 +304,13 @@ status:
   podName: build-docker-image-from-git-source-task-run-pod-24d414
   startTime: 2018-12-11T18:14:29Z
   steps:
-    - logsURL: ""
-      terminated:
+    - terminated:
         containerID: docker://138ce30c722eed....c830c9d9005a0542
         exitCode: 0
         finishedAt: 2018-12-11T18:14:47Z
         reason: Completed
         startedAt: 2018-12-11T18:14:47Z
-    - logsURL: ""
-      terminated:
+    - terminated:
         containerID: docker://4a75136c029fb1....4c94b348d4f67744
         exitCode: 0
         finishedAt: 2018-12-11T18:14:48Z
@@ -329,17 +322,18 @@ The status of type `Succeeded = True` shows the Task ran successfully and you
 can also validate the Docker image is created in the location specified in the
 resource definition.
 
-# Pipeline
+## Pipeline
 
 A [`Pipeline`](pipelines.md) defines a list of tasks to execute in order, while
 also indicating if any outputs should be used as inputs of a following task by
-using [the `from` field](pipelines.md#from). The same templating you used in
-tasks is also available in pipeline.
+using [the `from` field](pipelines.md#from) and also indicating
+[the order of executing (using the `runAfter` and `from` fields)](pipelines.md#ordering).
+The same templating you used in tasks is also available in pipeline.
 
 For example:
 
 ```yaml
-apiVersion: pipeline.knative.dev/v1alpha1
+apiVersion: tekton.dev/v1alpha1
 kind: Pipeline
 metadata:
   name: tutorial-pipeline
@@ -367,7 +361,7 @@ spec:
             resource: web-image
     - name: deploy-web
       taskRef:
-        name: demo-deploy-kubectl
+        name: deploy-using-kubectl
       resources:
         inputs:
           - name: workspace
@@ -389,7 +383,7 @@ The above `Pipeline` is referencing a `Task` called `deploy-using-kubectl` which
 can be found here:
 
 ```yaml
-apiVersion: pipeline.knative.dev/v1alpha1
+apiVersion: tekton.dev/v1alpha1
 kind: Task
 metadata:
   name: deploy-using-kubectl
@@ -433,7 +427,7 @@ spec:
 To run the `Pipeline`, create a [`PipelineRun`](pipelineruns.md) as follows:
 
 ```yaml
-apiVersion: pipeline.knative.dev/v1alpha1
+apiVersion: tekton.dev/v1alpha1
 kind: PipelineRun
 metadata:
   name: tutorial-pipeline-run-1
@@ -470,7 +464,7 @@ kubectl get pipelineruns/tutorial-pipeline-run-1 -o yaml
 You will get an output similar to the following:
 
 ```yaml
-apiVersion: pipeline.knative.dev/v1alpha1
+apiVersion: tekton.dev/v1alpha1
 kind: PipelineRun
 metadata:
   annotations:
@@ -479,7 +473,7 @@ metadata:
   name: tutorial-pipeline-run-1
   namespace: default
   resourceVersion: "6760151"
-  selfLink: /apis/pipeline.knative.dev/v1alpha1/namespaces/default/pipelineruns/tutorial-pipeline-run-1
+  selfLink: /apis/tekton.dev/v1alpha1/namespaces/default/pipelineruns/tutorial-pipeline-run-1
   uid: 93acb0ea-fd83-11e8-9129-42010a8a0fdc
 spec:
   generation: 1
@@ -513,15 +507,13 @@ status:
       podName: tutorial-pipeline-run-1-build-skaffold-web-pod-21ddf0
       startTime: 2018-12-11T20:30:19Z
       steps:
-        - logsURL: ""
-          terminated:
+        - terminated:
             containerID: docker://c699fcba94....f96108ac9f4db22b94e0c
             exitCode: 0
             finishedAt: 2018-12-11T20:30:36Z
             reason: Completed
             startedAt: 2018-12-11T20:30:36Z
-        - logsURL: ""
-          terminated:
+        - terminated:
             containerID: docker://f5f752d....824262ad6ce7675
             exitCode: 0
             finishedAt: 2018-12-11T20:31:17Z
@@ -535,22 +527,19 @@ status:
       podName: tutorial-pipeline-run-1-deploy-web-pod-7a796b
       startTime: 2018-12-11T20:32:11Z
       steps:
-        - logsURL: ""
-          terminated:
+        - terminated:
             containerID: docker://eaefb7b6d685....f001f895430f71374
             exitCode: 0
             finishedAt: 2018-12-11T20:32:28Z
             reason: Completed
             startedAt: 2018-12-11T20:32:28Z
-        - logsURL: ""
-          terminated:
+        - terminated:
             containerID: docker://4cfc6eba47a7a....dcaef1e9b1eee3661b8a85f
             exitCode: 0
             finishedAt: 2018-12-11T20:32:31Z
             reason: Completed
             startedAt: 2018-12-11T20:32:31Z
-        - logsURL: ""
-          terminated:
+        - terminated:
             containerID: docker://01b376b92....dce4ccec9641d77
             exitCode: 0
             finishedAt: 2018-12-11T20:32:35Z
@@ -565,14 +554,14 @@ the status of individual Task runs are shown.
 
 ### Known good configuration
 
-Knative (as of version 0.3) is known to work with:
+Tekton Pipelines is known to work with:
 
 - [Docker for Desktop](https://www.docker.com/products/docker-desktop): a
   version that uses Kubernetes 1.11 or higher. At the time of this document,
   this requires the _edge_ version of Docker to be installed. A known good
   configuration specifies six CPUs, 10 GB of memory and 2 GB of swap space
 - The following
-  [prerequisites](https://github.com/knative/build-pipeline/blob/master/DEVELOPMENT.md#requirements)
+  [prerequisites](https://github.com/tektoncd/pipeline/blob/master/DEVELOPMENT.md#requirements)
 - Setting `host.docker.local:5000` as an insecure registry with Docker for
   Desktop (set via preferences or configuration, see the
   [Docker insecure registry documentation](https://docs.docker.com/registry/insecure/)
@@ -602,12 +591,11 @@ Knative (as of version 0.3) is known to work with:
 ### Logging
 
 - Logs can remain in-memory only as opposed to sent to a service such as
-  [Stackdriver](https://cloud.google.com/logging/). Achieve this by modifying or
-  deleting entirely (to just use stdout) a PipelineRun or TaskRun's `results`
-  specification.
+  [Stackdriver](https://cloud.google.com/logging/).
 
-Elasticsearch can be deployed locally as a means to view logs "after the fact":
-an example is provided at https://github.com/mgreau/knative-elastic-tutorials.
+Elasticsearch, Beats and Kibana can be deployed locally as a means to view logs:
+an example is provided at
+<https://github.com/mgreau/tekton-pipelines-elastic-tutorials>.
 
 ## Experimentation
 
@@ -615,6 +603,17 @@ Lines of code you may want to configure have the #configure annotation. This
 annotation applies to subjects such as Docker registries, log output locations
 and other nuances that may be specific to particular cloud providers or
 services.
+
+The `TaskRuns` have been created in the following
+[order](pipelines.md#ordering):
+
+1. `tutorial-pipeline-run-1-build-skaffold-web` - This runs the
+   [Pipeline Task](pipelines.md#pipeline-tasks) `build-skaffold-web` first,
+   because it has no [`from` or `runAfter` clauses](pipelines.md#ordering)
+1. `tutorial-pipeline-run-1-deploy-web` - This runs `deploy-web` second, because
+   its [input](tasks.md#inputs) `web-image` comes [`from`](pipelines.md#from)
+   `build-skaffold-web` (therefore `build-skaffold-web` must run before
+   `deploy-web`).
 
 ---
 

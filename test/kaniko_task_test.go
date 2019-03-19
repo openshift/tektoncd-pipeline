@@ -34,8 +34,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/knative/build-pipeline/pkg/apis/pipeline/v1alpha1"
-	tb "github.com/knative/build-pipeline/test/builder"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	tb "github.com/tektoncd/pipeline/test/builder"
 )
 
 const (
@@ -99,7 +99,7 @@ func getTask(repo, namespace string, withSecretConfig bool) *v1alpha1.Task {
 	}
 	if withSecretConfig {
 		stepOps = append(stepOps,
-			tb.VolumeMount(corev1.VolumeMount{Name: "kaniko-secret", MountPath: "/secrets"}),
+			tb.VolumeMount("kaniko-secret", "/secrets"),
 			tb.EnvVar("GOOGLE_APPLICATION_CREDENTIALS", "/secrets/config.json"),
 		)
 		taskSpecOps = append(taskSpecOps, tb.TaskVolume("kaniko-secret", tb.VolumeSource(corev1.VolumeSource{

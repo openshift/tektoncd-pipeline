@@ -1,7 +1,7 @@
-# Knative Pipelines
+# Tekton Pipelines
 
-Pipelines is an open source implementation to configure and run CI/CD style
-pipelines for your Kubernetes application.
+Tekton Pipelines is an open source implementation to configure and run CI/CD
+style pipelines for your Kubernetes application.
 
 Pipeline creates
 [Custom Resources](https://kubernetes.io/docs/concepts/extend-kubernetes/api-extension/custom-resources/)
@@ -46,16 +46,20 @@ components:
 - [`PipelineRun`](pipelineruns.md)
 - [`PipelineResource`](resources.md)
 
+Additional reference topics not related to a specific component:
+
+- [Labels](labels.md)
+
 ## Try it out
 
 - Follow along with [the tutorial](tutorial.md)
 - Look at
-  [the examples](https://github.com/knative/build-pipeline/tree/master/examples)
+  [the examples](https://github.com/tektoncd/pipeline/tree/master/examples)
 
 ## Related info
 
-If you are interested in contributing to the Knative Build project, see the
-[Knative Pipeline code repository](https://github.com/knative/build-pipeline).
+If you are interested in contributing to the Tekton Pipeline project, see the
+[Tekton Pipeline contribution guide](https://github.com/tektoncd/pipeline/blob/master/CONTRIBUTING.md).
 
 ---
 

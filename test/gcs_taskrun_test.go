@@ -22,10 +22,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/knative/build-pipeline/pkg/apis/pipeline/v1alpha1"
-	tb "github.com/knative/build-pipeline/test/builder"
 	knativetest "github.com/knative/pkg/test"
 	"github.com/knative/pkg/test/logging"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	tb "github.com/tektoncd/pipeline/test/builder"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -85,11 +85,11 @@ func getGCSStorageTask(namespace, secretName, secretKey string) *v1alpha1.Task {
 		),
 		tb.Step("read-secret-env", "ubuntu", tb.Command("/bin/bash"),
 			tb.Args("-c", "ls -la $CREDENTIALS"),
-			tb.VolumeMount(corev1.VolumeMount{
-				Name: fmt.Sprintf("volume-gcs-resource-%s", secretName), // this build should have volume with
+			tb.VolumeMount(fmt.Sprintf("volume-gcs-resource-%s", secretName),
+				// this build should have volume with
 				// name volume-(resource_name)-(secret_name) because of storage resource(gcs)
-				MountPath: fmt.Sprintf("/var/secret/%s", secretName),
-			}),
+				fmt.Sprintf("/var/secret/%s", secretName),
+			),
 			tb.EnvVar("CREDENTIALS", fmt.Sprintf("/var/secret/%s/%s", secretName, secretKey)),
 		),
 	))

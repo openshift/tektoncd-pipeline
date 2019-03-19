@@ -18,6 +18,7 @@ package names
 
 import (
 	"fmt"
+	"regexp"
 
 	utilrand "k8s.io/apimachinery/pkg/util/rand"
 )
@@ -25,10 +26,14 @@ import (
 // NameGenerator generates names for objects. Some backends may have more information
 // available to guide selection of new names and this interface hides those details.
 type NameGenerator interface {
-	// GenerateName generates a valid name from the base name, adding a random suffix to the
+	// RestrictLengthWithRandomSuffix generates a valid name from the base name, adding a random suffix to the
 	// the base. If base is valid, the returned name must also be valid. The generator is
 	// responsible for knowing the maximum valid name length.
-	GenerateName(base string) string
+	RestrictLengthWithRandomSuffix(base string) string
+
+	// RestrictLength generates a valid name from the name of a step specified in a Task,
+	// shortening it to the maximum valid name length if needed.
+	RestrictLength(base string) string
 }
 
 // simpleNameGenerator generates random names.
@@ -43,12 +48,24 @@ const (
 	// TODO: make this flexible for non-core resources with alternate naming rules.
 	maxNameLength          = 63
 	randomLength           = 5
-	maxGeneratedNameLength = maxNameLength - randomLength
+	maxGeneratedNameLength = maxNameLength - randomLength - 1
 )
 
-func (simpleNameGenerator) GenerateName(base string) string {
+func (simpleNameGenerator) RestrictLengthWithRandomSuffix(base string) string {
 	if len(base) > maxGeneratedNameLength {
 		base = base[:maxGeneratedNameLength]
 	}
 	return fmt.Sprintf("%s-%s", base, utilrand.String(randomLength))
+}
+
+func (simpleNameGenerator) RestrictLength(base string) string {
+	if len(base) > maxNameLength {
+		base = base[:maxNameLength]
+	}
+	var isAlphaNumeric = regexp.MustCompile(`^[a-zA-Z0-9]+$`).MatchString
+
+	for !isAlphaNumeric(base[len(base)-1:]) {
+		base = base[:len(base)-1]
+	}
+	return base
 }

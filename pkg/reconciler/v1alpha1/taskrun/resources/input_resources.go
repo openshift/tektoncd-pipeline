@@ -20,11 +20,11 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/knative/build-pipeline/pkg/apis/pipeline"
-	"github.com/knative/build-pipeline/pkg/apis/pipeline/v1alpha1"
-	artifacts "github.com/knative/build-pipeline/pkg/artifacts"
-	listers "github.com/knative/build-pipeline/pkg/client/listers/pipeline/v1alpha1"
 	buildv1alpha1 "github.com/knative/build/pkg/apis/build/v1alpha1"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	artifacts "github.com/tektoncd/pipeline/pkg/artifacts"
+	listers "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1alpha1"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -90,8 +90,8 @@ func AddInputResource(
 		// if taskrun is fetching resource from previous task then execute copy step instead of fetching new copy
 		// to the desired destination directory, as long as the resource exports output to be copied
 		if allowedOutputResources[resource.Spec.Type] && taskRun.HasPipelineRunOwnerReference() {
-			for i, path := range boundResource.Paths {
-				cpContainers := as.GetCopyFromContainerSpec(fmt.Sprintf("%s-%d", boundResource.Name, i), path, dPath)
+			for _, path := range boundResource.Paths {
+				cpContainers := as.GetCopyFromContainerSpec(boundResource.Name, path, dPath)
 				if as.GetType() == v1alpha1.ArtifactStoragePVCType {
 
 					mountPVC = true

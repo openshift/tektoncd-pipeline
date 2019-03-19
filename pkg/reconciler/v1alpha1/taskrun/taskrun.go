@@ -22,19 +22,17 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/knative/build-pipeline/pkg/apis/pipeline"
-	"github.com/knative/build-pipeline/pkg/apis/pipeline/v1alpha1"
-	informers "github.com/knative/build-pipeline/pkg/client/informers/externalversions/pipeline/v1alpha1"
-	listers "github.com/knative/build-pipeline/pkg/client/listers/pipeline/v1alpha1"
-	"github.com/knative/build-pipeline/pkg/reconciler"
-	"github.com/knative/build-pipeline/pkg/reconciler/v1alpha1/taskrun/config"
-	"github.com/knative/build-pipeline/pkg/reconciler/v1alpha1/taskrun/entrypoint"
-	"github.com/knative/build-pipeline/pkg/reconciler/v1alpha1/taskrun/resources"
 	buildv1alpha1 "github.com/knative/build/pkg/apis/build/v1alpha1"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
-	"github.com/knative/pkg/configmap"
 	"github.com/knative/pkg/controller"
 	"github.com/knative/pkg/tracker"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	informers "github.com/tektoncd/pipeline/pkg/client/informers/externalversions/pipeline/v1alpha1"
+	listers "github.com/tektoncd/pipeline/pkg/client/listers/pipeline/v1alpha1"
+	"github.com/tektoncd/pipeline/pkg/reconciler"
+	"github.com/tektoncd/pipeline/pkg/reconciler/v1alpha1/taskrun/entrypoint"
+	"github.com/tektoncd/pipeline/pkg/reconciler/v1alpha1/taskrun/resources"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
@@ -42,6 +40,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	coreinformers "k8s.io/client-go/informers/core/v1"
+	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -79,11 +78,6 @@ var (
 	}
 )
 
-type configStore interface {
-	ToContext(ctx context.Context) context.Context
-	WatchConfigs(w configmap.Watcher)
-}
-
 // Reconciler implements controller.Reconciler for Configuration resources.
 type Reconciler struct {
 	*reconciler.Base
@@ -94,7 +88,7 @@ type Reconciler struct {
 	clusterTaskLister listers.ClusterTaskLister
 	resourceLister    listers.PipelineResourceLister
 	tracker           tracker.Interface
-	configStore       configStore
+	cache             *entrypoint.Cache
 }
 
 // Check that our Reconciler implements controller.Reconciler
@@ -108,6 +102,7 @@ func NewController(
 	clusterTaskInformer informers.ClusterTaskInformer,
 	resourceInformer informers.PipelineResourceInformer,
 	podInformer coreinformers.PodInformer,
+	entrypointCache *entrypoint.Cache,
 ) *controller.Impl {
 
 	c := &Reconciler{
@@ -131,9 +126,12 @@ func NewController(
 		UpdateFunc: controller.PassNew(c.tracker.OnChanged),
 	})
 
-	c.Logger.Info("Setting up ConfigMap receivers")
-	c.configStore = config.NewStore(c.Logger.Named("config-store"))
-	c.configStore.WatchConfigs(opt.ConfigMapWatcher)
+	c.Logger.Info("Setting up Entrypoint cache")
+	c.cache = entrypointCache
+	if c.cache == nil {
+		c.cache, _ = entrypoint.NewCache()
+	}
+
 	return impl
 }
 
@@ -147,8 +145,6 @@ func (c *Reconciler) Reconcile(ctx context.Context, key string) error {
 		c.Logger.Errorf("invalid resource key: %s", key)
 		return nil
 	}
-
-	ctx = c.configStore.ToContext(ctx)
 
 	// Get the Task Run resource with this namespace/name
 	original, err := c.taskRunLister.TaskRuns(namespace).Get(name)
@@ -184,6 +180,15 @@ func (c *Reconciler) Reconcile(ctx context.Context, key string) error {
 		c.Logger.Warn("Failed to update taskRun status", zap.Error(err))
 		return err
 	}
+	// Since we are using the status subresource, it is not possible to update
+	// the status and labels simultaneously.
+	if !reflect.DeepEqual(original.ObjectMeta.Labels, tr.ObjectMeta.Labels) {
+		if _, err := c.updateLabels(tr); err != nil {
+			c.Logger.Warn("Failed to update TaskRun labels", zap.Error(err))
+			return err
+		}
+	}
+
 	return err
 }
 
@@ -220,7 +225,7 @@ func (c *Reconciler) reconcile(ctx context.Context, tr *v1alpha1.TaskRun) error 
 	}
 
 	getTaskFunc := c.getTaskFunc(tr)
-	spec, taskName, err := resources.GetTaskSpec(&tr.Spec, tr.Name, getTaskFunc)
+	taskMeta, taskSpec, err := resources.GetTaskData(tr, getTaskFunc)
 	if err != nil {
 		c.Logger.Errorf("Failed to determine Task spec to use for taskrun %s: %v", tr.Name, err)
 		tr.Status.SetCondition(&duckv1alpha1.Condition{
@@ -232,15 +237,26 @@ func (c *Reconciler) reconcile(ctx context.Context, tr *v1alpha1.TaskRun) error 
 		return nil
 	}
 
+	// Propagate labels from Task to TaskRun.
+	if tr.ObjectMeta.Labels == nil {
+		tr.ObjectMeta.Labels = make(map[string]string, len(taskMeta.Labels)+1)
+	}
+	for key, value := range taskMeta.Labels {
+		tr.ObjectMeta.Labels[key] = value
+	}
+	if tr.Spec.TaskRef != nil {
+		tr.ObjectMeta.Labels[pipeline.GroupName+pipeline.TaskLabelKey] = taskMeta.Name
+	}
+
 	// Check if the TaskRun has timed out; if it is, this will set its status
 	// accordingly.
-	if timedOut, err := c.checkTimeout(tr, spec, c.KubeClientSet.CoreV1().Pods(tr.Namespace).Delete); err != nil {
+	if timedOut, err := c.checkTimeout(tr, taskSpec, c.KubeClientSet.CoreV1().Pods(tr.Namespace).Delete); err != nil {
 		return err
 	} else if timedOut {
 		return nil
 	}
 
-	rtr, err := resources.ResolveTaskResources(spec, taskName, tr.Spec.Inputs.Resources, tr.Spec.Outputs.Resources, c.resourceLister.PipelineResources(tr.Namespace).Get)
+	rtr, err := resources.ResolveTaskResources(taskSpec, taskMeta.Name, tr.Spec.Inputs.Resources, tr.Spec.Outputs.Resources, c.resourceLister.PipelineResources(tr.Namespace).Get)
 	if err != nil {
 		c.Logger.Errorf("Failed to resolve references for taskrun %s: %v", tr.Name, err)
 		tr.Status.SetCondition(&duckv1alpha1.Condition{
@@ -273,7 +289,7 @@ func (c *Reconciler) reconcile(ctx context.Context, tr *v1alpha1.TaskRun) error 
 		}
 	} else {
 		// Build pod is not present, create build pod.
-		pod, err = c.createBuildPod(ctx, tr, rtr.TaskSpec, rtr.TaskName)
+		pod, err = c.createBuildPod(tr, rtr.TaskSpec, rtr.TaskName)
 		if err != nil {
 			// This Run has failed, so we need to mark it as failed and stop reconciling it
 			var msg string
@@ -344,59 +360,55 @@ func updateStatusFromBuildStatus(taskRun *v1alpha1.TaskRun, buildStatus buildv1a
 func (c *Reconciler) updateStatus(taskrun *v1alpha1.TaskRun) (*v1alpha1.TaskRun, error) {
 	newtaskrun, err := c.taskRunLister.TaskRuns(taskrun.Namespace).Get(taskrun.Name)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Error getting TaskRun %s when updating status: %s", taskrun.Name, err)
 	}
 	if !reflect.DeepEqual(taskrun.Status, newtaskrun.Status) {
 		newtaskrun.Status = taskrun.Status
-		return c.PipelineClientSet.PipelineV1alpha1().TaskRuns(taskrun.Namespace).UpdateStatus(newtaskrun)
+		return c.PipelineClientSet.TektonV1alpha1().TaskRuns(taskrun.Namespace).UpdateStatus(newtaskrun)
 	}
 	return newtaskrun, nil
 }
 
+func (c *Reconciler) updateLabels(tr *v1alpha1.TaskRun) (*v1alpha1.TaskRun, error) {
+	newTr, err := c.taskRunLister.TaskRuns(tr.Namespace).Get(tr.Name)
+	if err != nil {
+		return nil, fmt.Errorf("Error getting TaskRun %s when updating labels: %s", tr.Name, err)
+	}
+	if !reflect.DeepEqual(tr.ObjectMeta.Labels, newTr.ObjectMeta.Labels) {
+		newTr.ObjectMeta.Labels = tr.ObjectMeta.Labels
+		return c.PipelineClientSet.TektonV1alpha1().TaskRuns(tr.Namespace).Update(newTr)
+	}
+	return newTr, nil
+}
+
 // createPod creates a Pod based on the Task's configuration, with pvcName as a
 // volumeMount
-func (c *Reconciler) createBuildPod(ctx context.Context, tr *v1alpha1.TaskRun, ts *v1alpha1.TaskSpec, taskName string) (*corev1.Pod, error) {
+func (c *Reconciler) createBuildPod(tr *v1alpha1.TaskRun, ts *v1alpha1.TaskSpec, taskName string) (*corev1.Pod, error) {
 	// TODO: Preferably use Validate on task.spec to catch validation error
 	bs := ts.GetBuildSpec()
 	if bs == nil {
 		return nil, fmt.Errorf("task %s has nil BuildSpec", taskName)
 	}
 
-	// For each step with no entrypoint set, try to populate it with the info
-	// from the remote registry
-	entrypointCache, err := entrypoint.NewCache()
-	if err != nil {
-		return nil, fmt.Errorf("couldn't create new entrypoint cache: %v", err)
-	}
-	digestCache, err := entrypoint.NewCache()
-	if err != nil {
-		return nil, fmt.Errorf("couldn't create new digest cache: %v", err)
-	}
 	bSpec := bs.DeepCopy()
-	for i := range bSpec.Steps {
-		step := &bSpec.Steps[i]
-		if len(step.Command) == 0 {
-			digest, err := entrypoint.GetImageDigest(digestCache, step.Image)
-			if err != nil {
-				return nil, fmt.Errorf("could not get digest for %s: %v", step.Image, err)
-			}
-			ep, err := entrypoint.GetRemoteEntrypoint(entrypointCache, digest)
-			if err != nil {
-				return nil, fmt.Errorf("could not get entrypoint from registry for %s: %v", step.Image, err)
-			}
-			step.Command = ep
-		}
-	}
 	bSpec.Timeout = tr.Spec.Timeout
 	bSpec.Affinity = tr.Spec.Affinity
 	bSpec.NodeSelector = tr.Spec.NodeSelector
 
-	build, err := createRedirectedBuild(ctx, bSpec, tr)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't create redirected Build: %v", err)
+	build := &buildv1alpha1.Build{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      tr.Name,
+			Namespace: tr.Namespace,
+			OwnerReferences: []metav1.OwnerReference{
+				*metav1.NewControllerRef(tr, groupVersionKind),
+			},
+			// Attach new label and pass taskrun labels to build
+			Labels: makeLabels(tr),
+		},
+		Spec: *bSpec,
 	}
 
-	build, err = resources.AddInputResource(c.KubeClientSet, build, taskName, ts, tr, c.resourceLister, c.Logger)
+	build, err := resources.AddInputResource(c.KubeClientSet, build, taskName, ts, tr, c.resourceLister, c.Logger)
 	if err != nil {
 		c.Logger.Errorf("Failed to create a build for taskrun: %s due to input resource error %v", tr.Name, err)
 		return nil, err
@@ -406,6 +418,11 @@ func (c *Reconciler) createBuildPod(ctx context.Context, tr *v1alpha1.TaskRun, t
 	if err != nil {
 		c.Logger.Errorf("Failed to create a build for taskrun: %s due to output resource error %v", tr.Name, err)
 		return nil, err
+	}
+
+	build, err = createRedirectedBuild(c.KubeClientSet, build, tr, c.cache, c.Logger)
+	if err != nil {
+		return nil, fmt.Errorf("couldn't create redirected Build: %v", err)
 	}
 
 	var defaults []v1alpha1.TaskParam
@@ -437,20 +454,21 @@ func (c *Reconciler) createBuildPod(ctx context.Context, tr *v1alpha1.TaskRun, t
 // an entrypoint cache creates a build where all entrypoints are switched to
 // be the entrypoint redirector binary. This function assumes that it receives
 // its own copy of the BuildSpec and modifies it freely
-func createRedirectedBuild(ctx context.Context, bs *buildv1alpha1.BuildSpec, tr *v1alpha1.TaskRun) (*buildv1alpha1.Build, error) {
+func createRedirectedBuild(kubeclient kubernetes.Interface, build *buildv1alpha1.Build, tr *v1alpha1.TaskRun, cache *entrypoint.Cache, logger *zap.SugaredLogger) (*buildv1alpha1.Build, error) {
+	bs := &build.Spec
 	// Pass service account name from taskrun to build
 	bs.ServiceAccountName = tr.Spec.ServiceAccount
 
 	// RedirectSteps the entrypoint in each container so that we can use our custom
 	// entrypoint which copies logs to the volume
-	err := entrypoint.RedirectSteps(bs.Steps)
+	err := entrypoint.RedirectSteps(cache, bs.Steps, kubeclient, build, logger)
 	if err != nil {
 		return nil, fmt.Errorf("failed to add entrypoint to steps of TaskRun %s: %v", tr.Name, err)
 	}
 	// Add the step which will copy the entrypoint into the volume
 	// we are going to be using, so that all of the steps will have
 	// access to it.
-	entrypoint.AddCopyStep(ctx, bs)
+	entrypoint.AddCopyStep(bs)
 	b := &buildv1alpha1.Build{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      tr.Name,
@@ -477,7 +495,7 @@ func createRedirectedBuild(ctx context.Context, bs *buildv1alpha1.BuildSpec, tr 
 	return b, nil
 }
 
-// makeLabels constructs the labels we will apply to TaskRun resources.
+// makeLabels constructs the labels we will propagate from TaskRuns to Pods.
 func makeLabels(s *v1alpha1.TaskRun) map[string]string {
 	labels := make(map[string]string, len(s.ObjectMeta.Labels)+1)
 	for k, v := range s.ObjectMeta.Labels {

@@ -20,9 +20,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/knative/build-pipeline/pkg/apis/pipeline/v1alpha1"
-	tb "github.com/knative/build-pipeline/test/builder"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	tb "github.com/tektoncd/pipeline/test/builder"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -98,10 +98,10 @@ func fakeClients(d Data) *clients {
 	fakeClients, _ := SeedTestData(d)
 	// 	c.KubeClient = fakeClients.Kube
 	return &clients{
-		PipelineClient:         fakeClients.Pipeline.PipelineV1alpha1().Pipelines(waitNamespace),
-		PipelineResourceClient: fakeClients.Pipeline.PipelineV1alpha1().PipelineResources(waitNamespace),
-		PipelineRunClient:      fakeClients.Pipeline.PipelineV1alpha1().PipelineRuns(waitNamespace),
-		TaskClient:             fakeClients.Pipeline.PipelineV1alpha1().Tasks(waitNamespace),
-		TaskRunClient:          fakeClients.Pipeline.PipelineV1alpha1().TaskRuns(waitNamespace),
+		PipelineClient:         fakeClients.Pipeline.TektonV1alpha1().Pipelines(waitNamespace),
+		PipelineResourceClient: fakeClients.Pipeline.TektonV1alpha1().PipelineResources(waitNamespace),
+		PipelineRunClient:      fakeClients.Pipeline.TektonV1alpha1().PipelineRuns(waitNamespace),
+		TaskClient:             fakeClients.Pipeline.TektonV1alpha1().Tasks(waitNamespace),
+		TaskRunClient:          fakeClients.Pipeline.TektonV1alpha1().TaskRuns(waitNamespace),
 	}
 }

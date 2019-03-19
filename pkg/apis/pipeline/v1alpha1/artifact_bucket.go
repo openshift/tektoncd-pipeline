@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/knative/build-pipeline/pkg/names"
+	"github.com/tektoncd/pipeline/pkg/names"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -77,19 +77,21 @@ func (b *ArtifactBucket) StorageBasePath(pr *PipelineRun) string {
 
 // GetCopyFromContainerSpec returns a container used to download artifacts from temporary storage
 func (b *ArtifactBucket) GetCopyFromContainerSpec(name, sourcePath, destinationPath string) []corev1.Container {
-	args := []string{"-args", fmt.Sprintf("cp -r %s %s", fmt.Sprintf("%s/%s/**", b.Location, sourcePath), destinationPath)}
+	args := []string{"-args", fmt.Sprintf("cp -r %s %s", fmt.Sprintf("%s/%s/*", b.Location, sourcePath), destinationPath)}
 
 	envVars, secretVolumeMount := getSecretEnvVarsAndVolumeMounts("bucket", secretVolumeMountPath, b.Secrets)
 
 	return []corev1.Container{{
-		Name:  names.SimpleNameGenerator.GenerateName(fmt.Sprintf("artifact-dest-mkdir-%s", name)),
-		Image: *bashNoopImage,
+		Name:    names.SimpleNameGenerator.RestrictLengthWithRandomSuffix(fmt.Sprintf("artifact-dest-mkdir-%s", name)),
+		Image:   *bashNoopImage,
+		Command: []string{"/ko-app/bash"},
 		Args: []string{
 			"-args", strings.Join([]string{"mkdir", "-p", destinationPath}, " "),
 		},
 	}, {
-		Name:         names.SimpleNameGenerator.GenerateName(fmt.Sprintf("artifact-copy-from-%s", name)),
+		Name:         names.SimpleNameGenerator.RestrictLengthWithRandomSuffix(fmt.Sprintf("artifact-copy-from-%s", name)),
 		Image:        *gsutilImage,
+		Command:      []string{"/ko-app/gsutil"},
 		Args:         args,
 		Env:          envVars,
 		VolumeMounts: secretVolumeMount,
@@ -103,8 +105,9 @@ func (b *ArtifactBucket) GetCopyToContainerSpec(name, sourcePath, destinationPat
 	envVars, secretVolumeMount := getSecretEnvVarsAndVolumeMounts("bucket", secretVolumeMountPath, b.Secrets)
 
 	return []corev1.Container{{
-		Name:         names.SimpleNameGenerator.GenerateName(fmt.Sprintf("artifact-copy-to-%s", name)),
+		Name:         names.SimpleNameGenerator.RestrictLengthWithRandomSuffix(fmt.Sprintf("artifact-copy-to-%s", name)),
 		Image:        *gsutilImage,
+		Command:      []string{"/ko-app/gsutil"},
 		Args:         args,
 		Env:          envVars,
 		VolumeMounts: secretVolumeMount,
@@ -117,7 +120,7 @@ func (b *ArtifactBucket) GetSecretsVolumes() []corev1.Volume {
 	volumes := []corev1.Volume{}
 	for _, sec := range b.Secrets {
 		volumes = append(volumes, corev1.Volume{
-			Name: names.SimpleNameGenerator.GenerateName(fmt.Sprintf("bucket-secret-%s", sec.SecretName)),
+			Name: names.SimpleNameGenerator.RestrictLengthWithRandomSuffix(fmt.Sprintf("bucket-secret-%s", sec.SecretName)),
 			VolumeSource: corev1.VolumeSource{
 				Secret: &corev1.SecretVolumeSource{
 					SecretName: sec.SecretName,

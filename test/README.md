@@ -36,17 +36,17 @@ fake clients and objects for unit testing. The ones we are using are:
    CRDs.
 
 You can create a fake PipelineClient for the Controller under test like
-[this](https://github.com/knative/build-pipeline/blob/d97057a58e16c11ca5e38b780a7bb3ddae42bae1/pkg/reconciler/v1alpha1/pipelinerun/pipelinerun_test.go#L209):
+[this](https://github.com/tektoncd/pipeline/blob/d97057a58e16c11ca5e38b780a7bb3ddae42bae1/pkg/reconciler/v1alpha1/pipelinerun/pipelinerun_test.go#L209):
 
 ```go
 import (
-    fakepipelineclientset "github.com/knative/build-pipeline/pkg/client/clientset/versioned/fake
+    fakepipelineclientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned/fake
 )
 pipelineClient := fakepipelineclientset.NewSimpleClientset()
 ```
 
 This
-[pipelineClient](https://github.com/knative/build-pipeline/blob/d97057a58e16c11ca5e38b780a7bb3ddae42bae1/pkg/client/clientset/versioned/clientset.go#L34)
+[pipelineClient](https://github.com/tektoncd/pipeline/blob/d97057a58e16c11ca5e38b780a7bb3ddae42bae1/pkg/client/clientset/versioned/clientset.go#L34)
 is initialized with no runtime objects. You can also initialize the client with
 Kubernetes objects and can interact with them using the
 `pipelineClient.Pipeline()`
@@ -147,13 +147,13 @@ export GCP_SERVICE_ACCOUNT_KEY_PATH="$PWD/config.json"
 
 ### Running
 
-Integration tests live in this directory. To run these tests, you must provide
+End to end tests live in this directory. To run these tests, you must provide
 `go` with `-tags=e2e`. By default the tests run against your current kubeconfig
 context, but you can change that and other settings with [the flags](#flags):
 
 ```shell
-go test -v -count=1 -tags=e2e ./test
-go test -v -tags=e2e -count=1 ./test --kubeconfig ~/special/kubeconfig --cluster myspecialcluster
+go test -v -count=1 -tags=e2e -timeout=20m ./test
+go test -v -count=1 -tags=e2e -timeout=20m ./test --kubeconfig ~/special/kubeconfig --cluster myspecialcluster
 ```
 
 You can also use
@@ -170,6 +170,8 @@ You can also use
   test as well as from k8s libraries.
 - Using `-count=1` is
   [the idiomatic way to disable test caching](https://golang.org/doc/go1.10#test).
+- The end to end tests take a long time to run so a value like `-timeout=20m`
+  can be useful depending on what you're running
 
 You can [use test flags](#flags) to control the environment your tests run
 against, i.e. override
@@ -183,11 +185,6 @@ Tests importing
 [`github.com/knative/build-pipline/test`](#adding-integration-tests) recognize
 the
 [flags added by `knative/pkg/test`](https://github.com/knative/pkg/tree/master/test#flags).
-
-Note the environment variable `K8S_CLUSTER_OVERRIDE`, while used by
-[knative/serving](https://github.com/knative/serving) and not by this project,
-will override the cluster used by the integration tests since they use
-[the same libs to get these flags](https://github.com/knative/serving).
 
 ### One test case
 
@@ -274,7 +271,7 @@ func setup(t *testing.T) *test.Clients {
 The `Clients` struct contains initialized clients for accessing:
 
 - Kubernetes objects
-- [`Pipelines`](https://github.com/knative/build-pipeline#pipeline)
+- [`Pipelines`](https://github.com/tektoncd/pipeline#pipeline)
 
 For example, to create a `Pipeline`:
 
@@ -301,7 +298,7 @@ You can use the function `GenerateName()` to append a random string for `crd`s
 or anything else, so that your tests can use unique names each time they run.
 
 ```go
-import "github.com/knative/build-pipeline/pkg/names"
+import "github.com/tektoncd/pipeline/pkg/names"
 
 namespace := names.SimpleNameGenerator.GenerateName("arendelle")
 ```
@@ -350,7 +347,7 @@ test/presubmit-tests.sh --unit-tests
 
 Prow is configured in
 [the knative `config.yaml` in `knative/test-infra`](https://github.com/knative/test-infra/blob/master/ci/prow/config.yaml)
-via the sections for `knative/build-pipeline`.
+via the sections for `tektoncd/pipeline`.
 
 ### Running presubmit integration tests
 
@@ -367,14 +364,12 @@ which only
 have access to.
 
 If you would like to run the integration tests against your cluster, you can use
-the `K8S_CLUSTER_OVERRIDE` environment variable to force the scripts to use your
-own cluster, provide `DOCKER_REPO_OVERRIDE` (as specified in the
-[DEVELOPMENT.md](../DEVELOPMENT.md#environment-setup)), use `e2e-tests.sh`
-directly and provide the `--run-tests` argument:
+the current context in your kubeconfig, provide `KO_DOCKER_REPO` (as specified
+in the [DEVELOPMENT.md](../DEVELOPMENT.md#environment-setup)), use
+`e2e-tests.sh` directly and provide the `--run-tests` argument:
 
 ```shell
-export K8S_CLUSTER_OVERRIDE=my_k8s_cluster # corresponds to a `context` in your kubeconfig
-export DOCKER_REPO_OVERRIDE=gcr.io/my_docker_repo
+export KO_DOCKER_REPO=gcr.io/my_docker_repo
 test/e2e-tests.sh --run-tests
 ```
 

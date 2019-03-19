@@ -19,9 +19,9 @@ package resources
 import (
 	"fmt"
 
-	"github.com/knative/build-pipeline/pkg/apis/pipeline/v1alpha1"
-	"github.com/knative/build-pipeline/pkg/reconciler/v1alpha1/templating"
 	buildv1alpha1 "github.com/knative/build/pkg/apis/build/v1alpha1"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	"github.com/tektoncd/pipeline/pkg/templating"
 )
 
 // ApplyParameters applies the params from a TaskRun.Input.Parameters to a BuildSpec.
@@ -89,5 +89,20 @@ func ApplyReplacements(build *buildv1alpha1.Build, replacements map[string]strin
 			steps[i].VolumeMounts[iv].SubPath = templating.ApplyReplacements(v.SubPath, replacements)
 		}
 	}
+
+	// Apply variable expansion to the build's volumes
+	for i, v := range build.Spec.Volumes {
+		build.Spec.Volumes[i].Name = templating.ApplyReplacements(v.Name, replacements)
+		if v.VolumeSource.ConfigMap != nil {
+			build.Spec.Volumes[i].ConfigMap.Name = templating.ApplyReplacements(v.ConfigMap.Name, replacements)
+		}
+		if v.VolumeSource.Secret != nil {
+			build.Spec.Volumes[i].Secret.SecretName = templating.ApplyReplacements(v.Secret.SecretName, replacements)
+		}
+		if v.PersistentVolumeClaim != nil {
+			build.Spec.Volumes[i].PersistentVolumeClaim.ClaimName = templating.ApplyReplacements(v.PersistentVolumeClaim.ClaimName, replacements)
+		}
+	}
+
 	return build
 }

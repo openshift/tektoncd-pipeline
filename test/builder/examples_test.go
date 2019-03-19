@@ -17,9 +17,9 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/knative/build-pipeline/pkg/apis/pipeline/v1alpha1"
-	tb "github.com/knative/build-pipeline/test/builder"
 	buildv1alpha1 "github.com/knative/build/pkg/apis/build/v1alpha1"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	tb "github.com/tektoncd/pipeline/test/builder"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -153,10 +153,6 @@ func ExamplePipelineResource() {
 }
 
 func ExampleBuildSpec() {
-	toolsMount := corev1.VolumeMount{
-		Name:      "tools-volume",
-		MountPath: "/tools",
-	}
 	volume := corev1.Volume{
 		Name:         "tools-volume",
 		VolumeSource: corev1.VolumeSource{
@@ -165,7 +161,7 @@ func ExampleBuildSpec() {
 	}
 	buildSpec := tb.BuildSpec(
 		tb.BuildStep("simple-step", "foo", tb.Command("/myentrypoint"),
-			tb.VolumeMount(toolsMount),
+			tb.VolumeMount("tools-volume", "/tools"),
 		),
 		tb.BuildVolume(volume),
 	)

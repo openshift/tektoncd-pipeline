@@ -28,10 +28,10 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 
-	"github.com/knative/build-pipeline/pkg/credentials"
+	"github.com/tektoncd/pipeline/pkg/credentials"
 )
 
-const annotationPrefix = "build.knative.dev/docker-"
+const annotationPrefix = "tekton.dev/docker-"
 
 var config basicDocker
 var dockerConfig string

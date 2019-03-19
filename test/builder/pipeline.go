@@ -16,8 +16,8 @@ package builder
 import (
 	"time"
 
-	"github.com/knative/build-pipeline/pkg/apis/pipeline/v1alpha1"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -143,6 +143,14 @@ func PipelineTask(name, taskName string, ops ...PipelineTaskOp) PipelineSpecOp {
 			op(pTask)
 		}
 		ps.Tasks = append(ps.Tasks, *pTask)
+	}
+}
+
+// RunAfter will update the provided Pipeline Task to indicate that it
+// should be run after the provided list of Pipeline Task names.
+func RunAfter(tasks ...string) PipelineTaskOp {
+	return func(pt *v1alpha1.PipelineTask) {
+		pt.RunAfter = tasks
 	}
 }
 

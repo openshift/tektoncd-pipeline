@@ -18,7 +18,7 @@ To initialize client objects you can use the setup function. It returns a client
 that contains initialized clients for accessing:
 
 	- Kubernetes objects
-	- Pipelines (https://github.com/knative/build-pipeline#pipeline)
+	- Pipelines (https://github.com/tektoncd/pipeline#pipeline)
 
 For example, to create a Pipeline
 
@@ -38,9 +38,9 @@ package test
 import (
 	"testing"
 
-	"github.com/knative/build-pipeline/pkg/client/clientset/versioned"
-	"github.com/knative/build-pipeline/pkg/client/clientset/versioned/typed/pipeline/v1alpha1"
 	knativetest "github.com/knative/pkg/test"
+	"github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
+	"github.com/tektoncd/pipeline/pkg/client/clientset/versioned/typed/pipeline/v1alpha1"
 )
 
 // clients holds instances of interfaces for making requests to the Pipeline controllers.
@@ -76,10 +76,10 @@ func newClients(t *testing.T, configPath, clusterName, namespace string) *client
 	if err != nil {
 		t.Fatalf("failed to create pipeline clientset from config file at %s: %s", configPath, err)
 	}
-	c.PipelineClient = cs.PipelineV1alpha1().Pipelines(namespace)
-	c.TaskClient = cs.PipelineV1alpha1().Tasks(namespace)
-	c.TaskRunClient = cs.PipelineV1alpha1().TaskRuns(namespace)
-	c.PipelineRunClient = cs.PipelineV1alpha1().PipelineRuns(namespace)
-	c.PipelineResourceClient = cs.PipelineV1alpha1().PipelineResources(namespace)
+	c.PipelineClient = cs.TektonV1alpha1().Pipelines(namespace)
+	c.TaskClient = cs.TektonV1alpha1().Tasks(namespace)
+	c.TaskRunClient = cs.TektonV1alpha1().TaskRuns(namespace)
+	c.PipelineRunClient = cs.TektonV1alpha1().PipelineRuns(namespace)
+	c.PipelineResourceClient = cs.TektonV1alpha1().PipelineResources(namespace)
 	return c
 }

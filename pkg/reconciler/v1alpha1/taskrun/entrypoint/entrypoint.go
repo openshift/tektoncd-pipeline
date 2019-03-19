@@ -17,18 +17,22 @@ limitations under the License.
 package entrypoint
 
 import (
-	"context"
-	"encoding/json"
+	"flag"
 	"fmt"
+	"strconv"
 
 	"github.com/google/go-containerregistry/pkg/authn"
+	"github.com/google/go-containerregistry/pkg/authn/k8schain"
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/google"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 	lru "github.com/hashicorp/golang-lru"
+	buildv1alpha1 "github.com/knative/build/pkg/apis/build/v1alpha1"
+	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes"
 
-	"github.com/knative/build-pipeline/pkg/reconciler/v1alpha1/taskrun/config"
 	"github.com/knative/build/pkg/apis/build/v1alpha1"
 )
 
@@ -36,12 +40,10 @@ const (
 	// MountName is the name of the pvc being mounted (which
 	// will contain the entrypoint binary and eventually the logs)
 	MountName         = "tools"
-	MountPoint        = "/tools"
+	MountPoint        = "/builder/tools"
 	BinaryLocation    = MountPoint + "/entrypoint"
 	JSONConfigEnvVar  = "ENTRYPOINT_OPTIONS"
 	InitContainerName = "place-tools"
-	ProcessLogFile    = "/tools/process-log.txt"
-	MarkerFile        = "/tools/marker-file.txt"
 	digestSeparator   = "@"
 	cacheSize         = 1024
 )
@@ -50,6 +52,10 @@ var toolsMount = corev1.VolumeMount{
 	Name:      MountName,
 	MountPath: MountPoint,
 }
+var (
+	entrypointImage = flag.String("entrypoint-image", "override-with-entrypoint:latest",
+		"The container image containing our entrypoint binary.")
+)
 
 // Cache is a simple caching mechanism allowing for caching the results of
 // getting the Entrypoint of a container image from a remote registry. The
@@ -76,116 +82,137 @@ func (c *Cache) set(sha string, ep []string) {
 	c.lru.Add(sha, ep)
 }
 
+// AddToEntrypointCache adds an image digest and its entrypoint
+// to the cache
+func AddToEntrypointCache(c *Cache, sha string, ep []string) {
+	c.set(sha, ep)
+}
+
 // AddCopyStep will prepend a BuildStep (Container) that will
 // copy the entrypoint binary from the entrypoint image into the
 // volume mounted at MountPoint, so that it can be mounted by
 // subsequent steps and used to capture logs.
-func AddCopyStep(ctx context.Context, b *v1alpha1.BuildSpec) {
-	cfg := config.FromContext(ctx).Entrypoint
+func AddCopyStep(b *v1alpha1.BuildSpec) {
 
 	cp := corev1.Container{
-		Name:         InitContainerName,
-		Image:        cfg.Image,
-		Command:      []string{"/bin/cp"},
-		Args:         []string{"/entrypoint", BinaryLocation},
+		Name:    InitContainerName,
+		Image:   *entrypointImage,
+		Command: []string{"/bin/sh"},
+		// based on the ko version, the binary could be in one of two different locations
+		Args:         []string{"-c", fmt.Sprintf("if [[ -d /ko-app ]]; then cp /ko-app/entrypoint %s; else cp /ko-app %s;  fi;", BinaryLocation, BinaryLocation)},
 		VolumeMounts: []corev1.VolumeMount{toolsMount},
 	}
 	b.Steps = append([]corev1.Container{cp}, b.Steps...)
 
 }
 
-type entrypointArgs struct {
-	Args       []string `json:"args"`
-	ProcessLog string   `json:"process_log"`
-	MarkerFile string   `json:"marker_file"`
+// RedirectSteps will modify each of the steps/containers such that
+// the binary being run is no longer the one specified by the Command
+// and the Args, but is instead the entrypoint binary, which will
+// itself invoke the Command and Args, but also capture logs.
+func RedirectSteps(cache *Cache, steps []corev1.Container, kubeclient kubernetes.Interface, build *buildv1alpha1.Build, logger *zap.SugaredLogger) error {
+	for i := range steps {
+		step := &steps[i]
+		if len(step.Command) == 0 {
+			logger.Infof("Getting Cmd from remote entrypoint for step: %s", step.Name)
+			var err error
+			step.Command, err = GetRemoteEntrypoint(cache, step.Image, kubeclient, build)
+			if err != nil {
+				logger.Errorf("Error getting entry point image", err.Error())
+				return err
+			}
+		}
+
+		step.Args = GetArgs(i, step.Command, step.Args)
+		step.Command = []string{BinaryLocation}
+		step.VolumeMounts = append(step.VolumeMounts, toolsMount)
+	}
+
+	return nil
 }
 
-func getEnvVar(cmd, args []string) (string, error) {
-	entrypointArgs := entrypointArgs{
-		Args:       append(cmd, args...),
-		ProcessLog: ProcessLogFile,
-		MarkerFile: MarkerFile,
+// GetArgs returns the arguments that should be specified for the step which has been wrapped
+// such that it will execute our custom entrypoint instead of the user provided Command and Args.
+func GetArgs(stepNum int, commands, args []string) []string {
+	waitFile := fmt.Sprintf("%s/%s", MountPoint, strconv.Itoa(stepNum-1))
+	if stepNum == 0 {
+		waitFile = ""
 	}
-	j, err := json.Marshal(entrypointArgs)
-	if err != nil {
-		return "", fmt.Errorf("couldn't marshal arguments %q for entrypoint env var: %s", entrypointArgs, err)
+	// The binary we want to run must be separated from its arguments by --
+	// so if commands has more than one value, we'll move the other values
+	// into the arg list so we can separate them
+	if len(commands) > 1 {
+		args = append(commands[1:], args...)
+		commands = commands[:1]
 	}
-	return string(j), nil
+	argsForEntrypoint := append([]string{
+		"-wait_file", waitFile,
+		"-post_file", fmt.Sprintf("%s/%s", MountPoint, strconv.Itoa(stepNum)),
+		"-entrypoint"},
+		commands...,
+	)
+	// TODO: what if Command has multiple elements, do we need "--" between command and args?
+	argsForEntrypoint = append(argsForEntrypoint, "--")
+	return append(argsForEntrypoint, args...)
 }
 
 // GetRemoteEntrypoint accepts a cache of digest lookups, as well as the digest
 // to look for. If the cache does not contain the digest, it will lookup the
 // metadata from the images registry, and then commit that to the cache
-func GetRemoteEntrypoint(cache *Cache, digest string) ([]string, error) {
+func GetRemoteEntrypoint(cache *Cache, digest string, kubeclient kubernetes.Interface, build *buildv1alpha1.Build) ([]string, error) {
 	if ep, ok := cache.get(digest); ok {
 		return ep, nil
 	}
-	img, err := getRemoteImage(digest)
+	img, err := getRemoteImage(digest, kubeclient, build)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch remote image %s: %v", digest, err)
+		return nil, fmt.Errorf("Failed to fetch remote image %s: %v", digest, err)
 	}
 	cfg, err := img.ConfigFile()
 	if err != nil {
-		return nil, fmt.Errorf("couldn't get config for image %s: %v", digest, err)
+		return nil, fmt.Errorf("Failed to get config for image %s: %v", digest, err)
 	}
-	cache.set(digest, cfg.ContainerConfig.Entrypoint)
-	return cfg.ContainerConfig.Entrypoint, nil
+	var command []string
+	command = cfg.Config.Entrypoint
+	if len(command) == 0 {
+		command = cfg.Config.Cmd
+	}
+	cache.set(digest, command)
+	return command, nil
 }
 
-// GetImageDigest tries to find and return image digest in cache, if
-// cache doesn't exists it will lookup the digest in remote image manifest
-// and then cache it
-func GetImageDigest(cache *Cache, image string) (string, error) {
-	if digestList, ok := cache.get(image); ok && (len(digestList) > 0) {
-		return digestList[0], nil
-	}
-	img, err := getRemoteImage(image)
-	if err != nil {
-		return "", fmt.Errorf("failed to fetch remote image %s: %v", image, err)
-	}
-	digestHash, err := img.Digest()
-	if err != nil {
-		return "", fmt.Errorf("couldn't get digest hash for image %s: %v", image, err)
-	}
-	// Parse Digest Hash struct into sha string
-	digest := fmt.Sprintf("%s%s%s", image, digestSeparator, digestHash.String())
-	cache.set(image, []string{digest})
-
-	return digest, nil
-}
-
-// RedirectSteps will modify each of the steps/containers such that
-// the binary being run is no longer the one specified by the Command
-// and the Args, but is instead the entrypoint binary, which will
-// itself invoke the Command and Args, but also capture logs.
-func RedirectSteps(steps []corev1.Container) error {
-	for i := range steps {
-		step := &steps[i]
-		e, err := getEnvVar(step.Command, step.Args)
-		if err != nil {
-			return fmt.Errorf("couldn't get env var for entrypoint: %s", err)
-		}
-		step.Command = []string{BinaryLocation}
-		step.Args = []string{}
-
-		step.Env = append(step.Env, corev1.EnvVar{
-			Name:  JSONConfigEnvVar,
-			Value: e,
-		})
-		step.VolumeMounts = append(step.VolumeMounts, toolsMount)
-	}
-	return nil
-}
-
-func getRemoteImage(image string) (v1.Image, error) {
+func getRemoteImage(image string, kubeclient kubernetes.Interface, build *buildv1alpha1.Build) (v1.Image, error) {
 	// verify the image name, then download the remote config file
 	ref, err := name.ParseReference(image, name.WeakValidation)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't parse image %s: %v", image, err)
+		return nil, fmt.Errorf("Failed to parse image %s: %v", image, err)
 	}
-	img, err := remote.Image(ref, remote.WithAuthFromKeychain(authn.DefaultKeychain))
+
+	// First try to get the image anonymously
+	// FIXME(vdemeester): once google.Keychain fails smoother, this could be removed
+	// See https://gist.github.com/vdemeester/c397ffb3fd19b4cc2ba3243dc4db9f83 for the current errors
+	// with google.Keychain in case `gcloud` command isn't available in the cluster.'
+	if img, err := remote.Image(ref); err == nil {
+		// Calling ConfigFile to actually try to connect to the remote registry
+		if _, err := img.ConfigFile(); err == nil {
+			return img, nil
+		}
+	}
+
+	kc, err := k8schain.New(kubeclient, k8schain.Options{
+		Namespace:          build.Namespace,
+		ServiceAccountName: build.Spec.ServiceAccountName,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("couldn't get container image info from registry %s: %v", image, err)
+		return nil, fmt.Errorf("Failed to create k8schain: %v", err)
+	}
+
+	// this will first try to authenticate using the k8schain,
+	// then fall back to the google keychain,
+	// then fall back to anonymous
+	mkc := authn.NewMultiKeychain(kc, google.Keychain)
+	img, err := remote.Image(ref, remote.WithAuthFromKeychain(mkc))
+	if err != nil {
+		return nil, fmt.Errorf("Failed to get container image info from registry %s: %v", image, err)
 	}
 
 	return img, nil

@@ -16,8 +16,8 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/knative/build-pipeline/pkg/apis/pipeline/v1alpha1"
-	scheme "github.com/knative/build-pipeline/pkg/client/clientset/versioned/scheme"
+	v1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	scheme "github.com/tektoncd/pipeline/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -51,7 +51,7 @@ type pipelines struct {
 }
 
 // newPipelines returns a Pipelines
-func newPipelines(c *PipelineV1alpha1Client, namespace string) *pipelines {
+func newPipelines(c *TektonV1alpha1Client, namespace string) *pipelines {
 	return &pipelines{
 		client: c.RESTClient(),
 		ns:     namespace,

@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/knative/build-pipeline/pkg/names"
+	"github.com/tektoncd/pipeline/pkg/names"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -43,7 +43,7 @@ type GCSResource struct {
 	Secrets []SecretParam `json:"secrets"`
 }
 
-// NewGCSResource creates a new GCS resource to pass to knative build
+// NewGCSResource creates a new GCS resource to pass to a Task
 func NewGCSResource(r *PipelineResource) (*GCSResource, error) {
 	if r.Spec.Type != PipelineResourceTypeStorage {
 		return nil, fmt.Errorf("GCSResource: Cannot create a GCS resource from a %s Pipeline Resource", r.Spec.Type)
@@ -119,8 +119,9 @@ func (s *GCSResource) GetUploadContainerSpec() ([]corev1.Container, error) {
 	envVars, secretVolumeMount := getSecretEnvVarsAndVolumeMounts(s.Name, gcsSecretVolumeMountPath, s.Secrets)
 
 	return []corev1.Container{{
-		Name:         names.SimpleNameGenerator.GenerateName(fmt.Sprintf("upload-%s", s.Name)),
+		Name:         names.SimpleNameGenerator.RestrictLengthWithRandomSuffix(fmt.Sprintf("upload-%s", s.Name)),
 		Image:        *gsutilImage,
+		Command:      []string{"/ko-app/gsutil"},
 		Args:         args,
 		VolumeMounts: secretVolumeMount,
 		Env:          envVars,
@@ -134,7 +135,7 @@ func (s *GCSResource) GetDownloadContainerSpec() ([]corev1.Container, error) {
 	}
 	var args []string
 	if s.TypeDir {
-		args = []string{"-args", fmt.Sprintf("cp -r %s %s", fmt.Sprintf("%s/**", s.Location), s.DestinationDir)}
+		args = []string{"-args", fmt.Sprintf("cp -r %s %s", fmt.Sprintf("%s/*", s.Location), s.DestinationDir)}
 	} else {
 		args = []string{"-args", fmt.Sprintf("cp %s %s", s.Location, s.DestinationDir)}
 	}
@@ -142,8 +143,9 @@ func (s *GCSResource) GetDownloadContainerSpec() ([]corev1.Container, error) {
 	envVars, secretVolumeMount := getSecretEnvVarsAndVolumeMounts(s.Name, gcsSecretVolumeMountPath, s.Secrets)
 	return []corev1.Container{
 		CreateDirContainer(s.Name, s.DestinationDir), {
-			Name:         names.SimpleNameGenerator.GenerateName(fmt.Sprintf("fetch-%s", s.Name)),
+			Name:         names.SimpleNameGenerator.RestrictLengthWithRandomSuffix(fmt.Sprintf("fetch-%s", s.Name)),
 			Image:        *gsutilImage,
+			Command:      []string{"/ko-app/gsutil"},
 			Args:         args,
 			Env:          envVars,
 			VolumeMounts: secretVolumeMount,

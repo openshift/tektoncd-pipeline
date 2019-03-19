@@ -52,7 +52,7 @@ func TestPipelineRun_TaskRunref(t *testing.T) {
 	}
 
 	expectTaskRunRef := corev1.ObjectReference{
-		APIVersion: "build-pipeline.knative.dev/v1alpha1",
+		APIVersion: "build-tekton.dev/v1alpha1",
 		Kind:       "TaskRun",
 		Namespace:  p.Namespace,
 		Name:       p.Name,
@@ -80,7 +80,7 @@ func TestInitializeConditions(t *testing.T) {
 		t.Fatalf("PipelineRun StartTime not initialized correctly")
 	}
 
-	p.Status.TaskRuns["fooTask"] = TaskRunStatus{}
+	p.Status.TaskRuns["fooTask"] = &PipelineRunTaskRunStatus{}
 
 	p.Status.InitializeConditions()
 	if len(p.Status.TaskRuns) != 1 {

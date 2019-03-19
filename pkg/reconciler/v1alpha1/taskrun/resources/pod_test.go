@@ -28,11 +28,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	fakek8s "k8s.io/client-go/kubernetes/fake"
 
-	"github.com/knative/build-pipeline/test/names"
 	v1alpha1 "github.com/knative/build/pkg/apis/build/v1alpha1"
 	"github.com/knative/build/pkg/system"
 	"github.com/knative/pkg/apis"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
+	"github.com/tektoncd/pipeline/test/names"
 )
 
 var (
@@ -40,12 +40,14 @@ var (
 	ignoreVolatileTime          = cmp.Comparer(func(_, _ apis.VolatileTime) bool { return true })
 	ignoreVolatileTimePtr       = cmp.Comparer(func(_, _ *apis.VolatileTime) bool { return true })
 	nopContainer                = corev1.Container{
-		Name:  "nop",
-		Image: *nopImage,
+		Name:    "nop",
+		Image:   *nopImage,
+		Command: []string{"/ko-app/nop"},
 	}
 )
 
 func TestMakePod(t *testing.T) {
+	names.TestingSeed()
 	subPath := "subpath"
 	implicitVolumeMountsWithSubPath := []corev1.VolumeMount{}
 	for _, vm := range implicitVolumeMounts {
@@ -92,21 +94,24 @@ func TestMakePod(t *testing.T) {
 		want: &corev1.PodSpec{
 			RestartPolicy: corev1.RestartPolicyNever,
 			InitContainers: []corev1.Container{{
-				Name:         initContainerPrefix + credsInit + "-9l9zj",
+				Name:         containerPrefix + credsInit + "-9l9zj",
 				Image:        *credsImage,
+				Command:      []string{"/ko-app/creds-init"},
 				Args:         []string{},
 				Env:          implicitEnvVars,
 				VolumeMounts: implicitVolumeMounts,
 				WorkingDir:   workspaceDir,
-			}, {
+			}},
+			Containers: []corev1.Container{{
 				Name:         "build-step-name",
 				Image:        "image",
 				Env:          implicitEnvVars,
 				VolumeMounts: implicitVolumeMounts,
 				WorkingDir:   workspaceDir,
-			}},
-			Containers: []corev1.Container{nopContainer},
-			Volumes:    implicitVolumes,
+			},
+				nopContainer,
+			},
+			Volumes: implicitVolumes,
 		},
 	}, {
 		desc: "gcs-source-with-targetPath",
@@ -123,22 +128,25 @@ func TestMakePod(t *testing.T) {
 		want: &corev1.PodSpec{
 			RestartPolicy: corev1.RestartPolicyNever,
 			InitContainers: []corev1.Container{{
-				Name:         initContainerPrefix + credsInit + "-9l9zj",
+				Name:         containerPrefix + credsInit + "-9l9zj",
 				Image:        *credsImage,
+				Command:      []string{"/ko-app/creds-init"},
 				Args:         []string{},
 				Env:          implicitEnvVars,
 				VolumeMounts: implicitVolumeMounts, // without subpath
 				WorkingDir:   workspaceDir,
-			}, {
-				Name:         initContainerPrefix + gcsSource + "-gcs-foo-bar" + "-mz4c7",
+			}},
+			Containers: []corev1.Container{{
+				Name:         containerPrefix + gcsSource + "-gcs-foo-bar" + "-mz4c7",
 				Image:        *gcsFetcherImage,
 				Args:         []string{"--type", "Manifest", "--location", "gs://foo/bar", "--dest_dir", "/workspace/path/foo"},
 				Env:          implicitEnvVars,
 				VolumeMounts: implicitVolumeMounts, // without subpath
 				WorkingDir:   workspaceDir,
-			}},
-			Containers: []corev1.Container{nopContainer},
-			Volumes:    implicitVolumes,
+			},
+				nopContainer,
+			},
+			Volumes: implicitVolumes,
 		},
 	}, {
 		desc: "with-service-account",
@@ -153,8 +161,9 @@ func TestMakePod(t *testing.T) {
 			ServiceAccountName: "service-account",
 			RestartPolicy:      corev1.RestartPolicyNever,
 			InitContainers: []corev1.Container{{
-				Name:  initContainerPrefix + credsInit + "-mz4c7",
-				Image: *credsImage,
+				Name:    containerPrefix + credsInit + "-mz4c7",
+				Image:   *credsImage,
+				Command: []string{"/ko-app/creds-init"},
 				Args: []string{
 					"-basic-docker=multi-creds=https://docker.io",
 					"-basic-docker=multi-creds=https://us.gcr.io",
@@ -164,15 +173,83 @@ func TestMakePod(t *testing.T) {
 				Env:          implicitEnvVars,
 				VolumeMounts: implicitVolumeMountsWithSecrets,
 				WorkingDir:   workspaceDir,
-			}, {
+			}},
+			Containers: []corev1.Container{{
 				Name:         "build-step-name",
 				Image:        "image",
 				Env:          implicitEnvVars,
 				VolumeMounts: implicitVolumeMounts,
 				WorkingDir:   workspaceDir,
+			},
+				nopContainer,
+			},
+			Volumes: implicitVolumesWithSecrets,
+		},
+	}, {
+		desc: "very-long-step-name",
+		b: v1alpha1.BuildSpec{
+			Steps: []corev1.Container{{
+				Name:  "a-very-long-character-step-name-to-trigger-max-len----and-invalid-characters",
+				Image: "image",
 			}},
-			Containers: []corev1.Container{nopContainer},
-			Volumes:    implicitVolumesWithSecrets,
+		},
+		bAnnotations: map[string]string{
+			"simple-annotation-key": "simple-annotation-val",
+		},
+		want: &corev1.PodSpec{
+			RestartPolicy: corev1.RestartPolicyNever,
+			InitContainers: []corev1.Container{{
+				Name:         containerPrefix + credsInit + "-9l9zj",
+				Image:        *credsImage,
+				Command:      []string{"/ko-app/creds-init"},
+				Args:         []string{},
+				Env:          implicitEnvVars,
+				VolumeMounts: implicitVolumeMounts,
+				WorkingDir:   workspaceDir,
+			}},
+			Containers: []corev1.Container{{
+				Name:         "build-step-a-very-long-character-step-name-to-trigger-max-len",
+				Image:        "image",
+				Env:          implicitEnvVars,
+				VolumeMounts: implicitVolumeMounts,
+				WorkingDir:   workspaceDir,
+			},
+				nopContainer,
+			},
+			Volumes: implicitVolumes,
+		},
+	}, {
+		desc: "step-name-ends-with-non-alphanumeric",
+		b: v1alpha1.BuildSpec{
+			Steps: []corev1.Container{{
+				Name:  "ends-with-invalid-%%__$$",
+				Image: "image",
+			}},
+		},
+		bAnnotations: map[string]string{
+			"simple-annotation-key": "simple-annotation-val",
+		},
+		want: &corev1.PodSpec{
+			RestartPolicy: corev1.RestartPolicyNever,
+			InitContainers: []corev1.Container{{
+				Name:         containerPrefix + credsInit + "-9l9zj",
+				Image:        *credsImage,
+				Command:      []string{"/ko-app/creds-init"},
+				Args:         []string{},
+				Env:          implicitEnvVars,
+				VolumeMounts: implicitVolumeMounts,
+				WorkingDir:   workspaceDir,
+			}},
+			Containers: []corev1.Container{{
+				Name:         "build-step-ends-with-invalid",
+				Image:        "image",
+				Env:          implicitEnvVars,
+				VolumeMounts: implicitVolumeMounts,
+				WorkingDir:   workspaceDir,
+			},
+				nopContainer,
+			},
+			Volumes: implicitVolumes,
 		},
 	}} {
 		t.Run(c.desc, func(t *testing.T) {
@@ -187,10 +264,10 @@ func TestMakePod(t *testing.T) {
 				&corev1.Secret{
 					ObjectMeta: metav1.ObjectMeta{Name: "multi-creds",
 						Annotations: map[string]string{
-							"build.knative.dev/docker-0": "https://us.gcr.io",
-							"build.knative.dev/docker-1": "https://docker.io",
-							"build.knative.dev/git-0":    "github.com",
-							"build.knative.dev/git-1":    "gitlab.com",
+							"tekton.dev/docker-0": "https://us.gcr.io",
+							"tekton.dev/docker-1": "https://docker.io",
+							"tekton.dev/git-0":    "github.com",
+							"tekton.dev/git-1":    "gitlab.com",
 						}},
 					Type: "kubernetes.io/basic-auth",
 					Data: map[string][]byte{

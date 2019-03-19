@@ -32,13 +32,14 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	"github.com/knative/build-pipeline/pkg/credentials"
-	"github.com/knative/build-pipeline/pkg/credentials/dockercreds"
-	"github.com/knative/build-pipeline/pkg/credentials/gitcreds"
-	"github.com/knative/build-pipeline/pkg/names"
 	v1alpha1 "github.com/knative/build/pkg/apis/build/v1alpha1"
 	"github.com/knative/pkg/apis"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
+	"github.com/tektoncd/pipeline/pkg/credentials"
+	"github.com/tektoncd/pipeline/pkg/credentials/dockercreds"
+	"github.com/tektoncd/pipeline/pkg/credentials/gitcreds"
+	"github.com/tektoncd/pipeline/pkg/names"
+	"github.com/tektoncd/pipeline/pkg/reconciler/v1alpha1/taskrun/entrypoint"
 )
 
 const workspaceDir = "/workspace"
@@ -77,7 +78,7 @@ const (
 	// Prefixes to add to the name of the init containers.
 	// IMPORTANT: Changing these values without changing fluentd collection configuration
 	// will break log collection for init containers.
-	initContainerPrefix        = "build-step-"
+	containerPrefix            = "build-step-"
 	unnamedInitContainerPrefix = "build-step-unnamed-"
 	// A label with the following is added to the pod to identify the pods belonging to a build.
 	buildNameLabelKey = "build.knative.dev/buildName"
@@ -114,7 +115,7 @@ func gcsToContainer(source v1alpha1.SourceSpec, index int) (*corev1.Container, e
 	}
 
 	// source name is empty then use `build-step-gcs-source` name
-	containerName := initContainerPrefix + gcsSource + "-"
+	containerName := containerPrefix + gcsSource + "-"
 
 	// update container name to include `name` as suffix
 	if source.Name != "" {
@@ -123,7 +124,7 @@ func gcsToContainer(source v1alpha1.SourceSpec, index int) (*corev1.Container, e
 		containerName = containerName + strconv.Itoa(index)
 	}
 
-	containerName = names.SimpleNameGenerator.GenerateName(containerName)
+	containerName = names.SimpleNameGenerator.RestrictLengthWithRandomSuffix(containerName)
 
 	return &corev1.Container{
 		Name:         containerName,
@@ -183,7 +184,7 @@ func makeCredentialInitializer(build *v1alpha1.Build, kubeclient kubernetes.Inte
 		}
 
 		if matched {
-			name := names.SimpleNameGenerator.GenerateName(fmt.Sprintf("secret-volume-%s", secret.Name))
+			name := names.SimpleNameGenerator.RestrictLengthWithRandomSuffix(fmt.Sprintf("secret-volume-%s", secret.Name))
 			volumeMounts = append(volumeMounts, corev1.VolumeMount{
 				Name:      name,
 				MountPath: credentials.VolumeName(secret.Name),
@@ -200,8 +201,9 @@ func makeCredentialInitializer(build *v1alpha1.Build, kubeclient kubernetes.Inte
 	}
 
 	return &corev1.Container{
-		Name:         names.SimpleNameGenerator.GenerateName(initContainerPrefix + credsInit),
+		Name:         names.SimpleNameGenerator.RestrictLengthWithRandomSuffix(containerPrefix + credsInit),
 		Image:        *credsImage,
+		Command:      []string{"/ko-app/creds-init"},
 		Args:         args,
 		VolumeMounts: volumeMounts,
 		Env:          implicitEnvVars,
@@ -228,6 +230,7 @@ func MakePod(build *v1alpha1.Build, kubeclient kubernetes.Interface) (*corev1.Po
 	}
 
 	initContainers := []corev1.Container{*cred}
+	podContainers := []corev1.Container{}
 	var sources []v1alpha1.SourceSpec
 	// if source is present convert into sources
 	if source := build.Spec.Source; source != nil {
@@ -244,7 +247,7 @@ func MakePod(build *v1alpha1.Build, kubeclient kubernetes.Interface) (*corev1.Po
 			if err != nil {
 				return nil, err
 			}
-			initContainers = append(initContainers, *gcs)
+			podContainers = append(podContainers, *gcs)
 		}
 	}
 
@@ -270,10 +273,14 @@ func MakePod(build *v1alpha1.Build, kubeclient kubernetes.Interface) (*corev1.Po
 		if step.Name == "" {
 			step.Name = fmt.Sprintf("%v%d", unnamedInitContainerPrefix, i)
 		} else {
-			step.Name = fmt.Sprintf("%v%v", initContainerPrefix, step.Name)
+			step.Name = names.SimpleNameGenerator.RestrictLength(fmt.Sprintf("%v%v", containerPrefix, step.Name))
 		}
-
-		initContainers = append(initContainers, step)
+		// use the step name to add the entrypoint biary as an init container
+		if step.Name == names.SimpleNameGenerator.RestrictLength(fmt.Sprintf("%v%v", containerPrefix, entrypoint.InitContainerName)) {
+			initContainers = append(initContainers, step)
+		} else {
+			podContainers = append(podContainers, step)
+		}
 	}
 	// Add our implicit volumes and any volumes needed for secrets to the explicitly
 	// declared user volumes.
@@ -290,6 +297,8 @@ func MakePod(build *v1alpha1.Build, kubeclient kubernetes.Interface) (*corev1.Po
 	}
 	gibberish := hex.EncodeToString(b)
 
+	podContainers = append(podContainers, corev1.Container{Name: "nop", Image: *nopImage, Command: []string{"/ko-app/nop"}})
+
 	return &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			// We execute the build's pod in the same namespace as where the build was
@@ -298,7 +307,7 @@ func MakePod(build *v1alpha1.Build, kubeclient kubernetes.Interface) (*corev1.Po
 			// Generate a unique name based on the build's name.
 			// Add a unique suffix to avoid confusion when a build
 			// is deleted and re-created with the same name.
-			// We don't use GenerateName here because k8s fakes don't support it.
+			// We don't use RestrictLengthWithRandomSuffix here because k8s fakes don't support it.
 			Name: fmt.Sprintf("%s-pod-%s", build.Name, gibberish),
 			// If our parent TaskRun is deleted, then we should be as well.
 			OwnerReferences: build.OwnerReferences,
@@ -307,12 +316,9 @@ func MakePod(build *v1alpha1.Build, kubeclient kubernetes.Interface) (*corev1.Po
 		},
 		Spec: corev1.PodSpec{
 			// If the build fails, don't restart it.
-			RestartPolicy:  corev1.RestartPolicyNever,
-			InitContainers: initContainers,
-			Containers: []corev1.Container{{
-				Name:  "nop",
-				Image: *nopImage,
-			}},
+			RestartPolicy:      corev1.RestartPolicyNever,
+			InitContainers:     initContainers,
+			Containers:         podContainers,
 			ServiceAccountName: build.Spec.ServiceAccountName,
 			Volumes:            volumes,
 			NodeSelector:       build.Spec.NodeSelector,

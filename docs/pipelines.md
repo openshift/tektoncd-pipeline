@@ -9,6 +9,8 @@ This document defines `Pipelines` and their capabilities.
   - [Parameters](#parameters)
   - [Pipeline Tasks](#pipeline-tasks)
     - [From](#from)
+    - [RunAfter](#runafter)
+- [Ordering](#ordering)
 - [Examples](#examples)
 
 ## Syntax
@@ -18,7 +20,7 @@ following fields:
 
 - Required:
   - [`apiVersion`][kubernetes-overview] - Specifies the API version, for example
-    `pipeline.knative.dev/v1alpha1`.
+    `tekton.dev/v1alpha1`.
   - [`kind`][kubernetes-overview] - Specify the `Pipeline` resource object.
   - [`metadata`][kubernetes-overview] - Specifies data to uniquely identify the
     `Pipeline` resource object, for example a `name`.
@@ -31,6 +33,14 @@ following fields:
   - [`resources`](#declared-resources) - Specifies which
     [`PipelineResources`](resources.md) of which types the `Pipeline` will be
     using in its [Tasks](#pipeline-tasks)
+  - `tasks`
+    - `resources.inputs` / `resource.outputs`
+      - [`from`](#from) - Used when the content of the
+        [`PipelineResource`](resources.md) should come from the
+        [output](tasks.md#output) of a previous [Pipeline Task](#pipeline-tasks)
+      - [`runAfter`](#runAfter) - Used when the [Pipeline Task](#pipeline-task)
+        should be executed after another Pipeline Task, but there is no
+        [output linking](#from) required
 
 [kubernetes-overview]:
   https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/#required-fields
@@ -82,7 +92,7 @@ a parameter are optional, and if the `default` field is specified and this
 the `default` value will be used.
 
 ```yaml
-apiVersion: pipeline.knative.dev/v1alpha1
+apiVersion: tekton.dev/v1alpha1
 kind: Pipeline
 metadata:
   name: pipeline-with-parameters
@@ -105,7 +115,7 @@ spec:
 The following `PipelineRun` supplies a value for `context`:
 
 ```yaml
-apiVersion: pipeline.knative.dev/v1alpha1
+apiVersion: tekton.dev/v1alpha1
 kind: PipelineRun
 metadata:
   name: pipelinerun-with-parameters
@@ -119,9 +129,9 @@ spec:
 
 ### Pipeline Tasks
 
-A `Pipeline` will execute a sequence of [`Tasks`](tasks.md) in the order they
-are declared in. At a minimum, this declaration must include a reference to the
-`Task`:
+A `Pipeline` will execute a graph of [`Tasks`](tasks.md) (see
+[ordering](#ordering) for how to express this graph). At a minimum, this
+declaration must include a reference to the [`Task`](tasks.md):
 
 ```yaml
 tasks:
@@ -165,18 +175,23 @@ spec:
 
 #### from
 
-Sometimes you will have `Tasks` that need to take as input the output of a
-previous `Task`, for example, an image built by a previous `Task`.
+Sometimes you will have [Pipeline Tasks](#pipeline-tasks) that need to take as
+input the output of a previous `Task`, for example, an image built by a previous
+`Task`.
 
-Express this dependency by adding `from` on `Resources` that your `Tasks` need.
+Express this dependency by adding `from` on [`PipelineResources`](resources.md)
+that your `Tasks` need.
 
 - The (optional) `from` key on an `input source` defines a set of previous
   `PipelineTasks` (i.e. the named instance of a `Task`) in the `Pipeline`
 - When the `from` key is specified on an input source, the version of the
   resource that is from the defined list of tasks is used
 - `from` can support fan in and fan out
-- The name of the `PipelineResource` must correspond to a `PipelineResource`
-  from the `Task` that the referenced `PipelineTask` gives as an output
+- The `from` clause [expresses ordering](#ordering), i.e. the
+  [Pipeline Task](#pipeline-task) which provides the `PipelineResource` must run
+  _before_ the Pipeline Task which needs that `PipelineResource` as an input
+  - The name of the `PipelineResource` must correspond to a `PipelineResource`
+    from the `Task` that the referenced `PipelineTask` gives as an output
 
 For example see this `Pipeline` spec:
 
@@ -202,10 +217,132 @@ The resource `my-image` is expected to be given to the `deploy-app` `Task` from
 the `build-app` `Task`. This means that the `PipelineResource` `my-image` must
 also be declared as an output of `build-app`.
 
+This also means that the `build-app` Pipeline Task will run before `deploy-app`,
+regardless of the order they appear in the spec.
+
+#### runAfter
+
+Sometimes you will need to have [Pipeline Tasks](#pipeline-tasks) that need to
+run in a certain order, but they do not have an explicit
+[output](tasks.md#outputs) to [input](tasks.md#inputs) dependency (which is
+expressed via [`from`](#from)). In this case you can use `runAfter` to indicate
+that a Pipeline Task should be run after one or more previous Pipeline Tasks.
+
+For example see this `Pipeline` spec:
+
+```yaml
+- name: test-app
+  taskRef:
+    name: make-test
+  resources:
+    inputs:
+      - name: my-repo
+- name: build-app
+  taskRef:
+    name: kaniko-build
+  runAfter:
+    - test-app
+  resources:
+    inputs:
+      - name: my-repo
+```
+
+In this `Pipeline`, we want to test the code before we build from it, but there
+is no output from `test-app`, so `build-app` uses `runAfter` to indicate that
+`test-app` should run before it, regardless of the order they appear in the
+spec.
+
+## Ordering
+
+The [Pipeline Tasks](#pipeline-tasks) in a `Pipeline` can be connected and run
+in a graph, specifically a _Directed Acyclic Graph_ or DAG. Each of the Pipeline
+Tasks is a node, which can be connected (i.e. a _Graph_) such that one will run
+before another (i.e. _Directed_), and the execution will eventually complete
+(i.e. _Acyclic_, it will not get caught in infinite loops).
+
+This is done using:
+
+- [`from`](#from) clauses on the [`PipelineResources`](#resources) needed by a
+  `Task`
+- [`runAfter`](#runAfter) clauses on the [Pipeline Tasks](#pipeline-tasks)
+
+For example see this `Pipeline` spec:
+
+```yaml
+- name: lint-repo
+  taskRef:
+    name: pylint
+  resources:
+    inputs:
+      - name: my-repo
+- name: test-app
+  taskRef:
+    name: make-test
+  resources:
+    inputs:
+      - name: my-repo
+- name: build-app
+  taskRef:
+    name: kaniko-build-app
+  runAfter:
+    - test-app
+  resources:
+    inputs:
+      - name: my-repo
+    outputs:
+      - name: image
+        resource: my-app-image
+- name: build-frontend
+  taskRef:
+    name: kaniko-build-frontend
+  runAfter:
+    - test-app
+  resources:
+    inputs:
+      - name: my-repo
+    outputs:
+      - name: image
+        resource: my-frontend-image
+- name: deploy-all
+  taskRef:
+    name: deploy-kubectl
+  resources:
+    inputs:
+      - name: my-app-image
+        from:
+          - build-app
+      - name: my-frontend-image
+        from:
+          - build-frontend
+```
+
+This will result in the following execution graph:
+
+```none
+        |            |
+        v            v
+     test-app    lint-repo
+    /        \
+   v          v
+build-app  build-frontend
+   \          /
+    v        v
+    deploy-all
+```
+
+1. The `lint-repo` and `test-app` Pipeline Tasks will begin executing
+   simultaneously. (They have no `from` or `runAfter` clauses.)
+1. Once `test-app` completes, both `build-app` and `build-frontend` will begin
+   executing simultaneously (both `runAfter` `test-app`).
+1. When both `build-app` and `build-frontend` have completed, `deploy-all` will
+   execute (it requires `PipelineResources` from both Pipeline Tasks).
+1. The entire `Pipeline` will be finished executing after `lint-repo` and
+   `deploy-all` have completed.
+
 ## Examples
 
 For complete examples, see
-[the examples folder](https://github.com/knative/build-pipeline/tree/master/examples).
+[the examples folder](https://github.com/tektoncd/pipeline/tree/master/examples).
 
 ---
 

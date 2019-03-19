@@ -3,9 +3,8 @@
 This document defines `PipelineRuns` and their capabilities.
 
 On its own, a [`Pipeline`](pipelines.md) declares what [`Tasks`](tasks.md) to
-run, and dependencies between [`Task`](tasks.md) inputs and outputs via
-[`from`](pipelines.md#from). To execute the `Tasks` in the `Pipeline`, you must
-create a `PipelineRun`.
+run, and [the order they run in](pipelines.md#ordering). To execute the `Tasks`
+in the `Pipeline`, you must create a `PipelineRun`.
 
 Creation of a `PipelineRun` will trigger the creation of
 [`TaskRuns`](taskruns.md) for each `Task` in your pipeline.
@@ -25,7 +24,7 @@ following fields:
 
 - Required:
   - [`apiVersion`][kubernetes-overview] - Specifies the API version, for example
-    `pipeline.knative.dev/v1alpha1`.
+    `tekton.dev/v1alpha1`.
   - [`kind`][kubernetes-overview] - Specify the `PipelineRun` resource object.
   - [`metadata`][kubernetes-overview] - Specifies data to uniquely identify the
     `PipelineRun` resource object, for example a `name`.
@@ -43,12 +42,13 @@ following fields:
     object that enables your build to run with the defined authentication
     information.
   - `timeout` - Specifies timeout after which the `PipelineRun` will fail.
-  - [`nodeSelector`] - a selector which must be true for the pod to fit on a
+  - [`nodeSelector`] - A selector which must be true for the pod to fit on a
     node. The selector which must match a node's labels for the pod to be
     scheduled on that node. More info:
-    https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
-  - [`affinity`] - the pod's scheduling constraints. More info:
-    https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#node-affinity-beta-feature
+    <https://kubernetes.io/docs/concepts/configuration/assign-pod-node/>
+  - [`affinity`] - The pod's scheduling constraints. More info:
+
+    <https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#node-affinity-beta-feature>
 
 [kubernetes-overview]:
   https://kubernetes.io/docs/concepts/overview/working-with-objects/kubernetes-objects/#required-fields
@@ -97,26 +97,6 @@ of the `TaskRun` resource object.
 For examples and more information about specifying service accounts, see the
 [`ServiceAccount`](./auth.md) reference topic.
 
-## Labels
-
-Any labels specified in the metadata field of a `PipelineRun` will be propagated
-to the `TaskRuns` created automatically for each `Task` in the `Pipeline` and
-then to the `Pods` created for those `TaskRuns`. In addition, the following
-labels will be added automatically:
-
-- `pipeline.knative.dev/pipeline` will contain the name of the `Pipeline`
-- `pipeline.knative.dev/pipelineRun` will contain the name of the `PipelineRun`
-
-These labels make it easier to find the resources that are associated with a
-given pipeline.
-
-For example, to find all `Pods` created by a `Pipeline` named test-pipeline, you
-could use the following command:
-
-```shell
-kubectl get pods --all-namespaces -l pipeline.knative.dev/pipeline=test-pipeline
-```
-
 ## Cancelling a PipelineRun
 
 In order to cancel a running pipeline (`PipelineRun`), you need to update its
@@ -124,7 +104,7 @@ spec to mark it as cancelled. Related `TaskRun` instances will be marked as
 cancelled and running Pods will be deleted.
 
 ```yaml
-apiVersion: pipeline.knative.dev/v1alpha1
+apiVersion: tekton.dev/v1alpha1
 kind: PipelineRun
 metadata:
   name: go-example-git

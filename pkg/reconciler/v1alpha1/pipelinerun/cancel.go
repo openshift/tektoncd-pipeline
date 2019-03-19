@@ -20,10 +20,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/knative/build-pipeline/pkg/apis/pipeline/v1alpha1"
-	clientset "github.com/knative/build-pipeline/pkg/client/clientset/versioned"
-	"github.com/knative/build-pipeline/pkg/reconciler/v1alpha1/pipelinerun/resources"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	clientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
+	"github.com/tektoncd/pipeline/pkg/reconciler/v1alpha1/pipelinerun/resources"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -47,9 +47,11 @@ func cancelPipelineRun(pr *v1alpha1.PipelineRun, pipelineState []*resources.Reso
 			continue
 		}
 		rprt.TaskRun.Spec.Status = v1alpha1.TaskRunSpecStatusCancelled
-		if _, err := clientSet.PipelineV1alpha1().TaskRuns(pr.Namespace).UpdateStatus(rprt.TaskRun); err != nil {
+		if _, err := clientSet.TektonV1alpha1().TaskRuns(pr.Namespace).UpdateStatus(rprt.TaskRun); err != nil {
 			errs = append(errs, err.Error())
-			continue
+		}
+		if _, err := clientSet.TektonV1alpha1().TaskRuns(pr.Namespace).Update(rprt.TaskRun); err != nil {
+			errs = append(errs, err.Error())
 		}
 	}
 	if len(errs) > 0 {

@@ -19,11 +19,11 @@ package pipelinerun
 import (
 	"testing"
 
-	"github.com/knative/build-pipeline/pkg/apis/pipeline/v1alpha1"
-	"github.com/knative/build-pipeline/pkg/reconciler/v1alpha1/pipelinerun/resources"
-	"github.com/knative/build-pipeline/test"
-	tb "github.com/knative/build-pipeline/test/builder"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	"github.com/tektoncd/pipeline/pkg/reconciler/v1alpha1/pipelinerun/resources"
+	"github.com/tektoncd/pipeline/test"
+	tb "github.com/tektoncd/pipeline/test/builder"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -82,7 +82,7 @@ func TestCancelPipelineRun(t *testing.T) {
 			if cond.IsTrue() {
 				t.Errorf("Expected PipelineRun status to be complete and false, but was %v", cond)
 			}
-			l, err := c.Pipeline.PipelineV1alpha1().TaskRuns("foo").List(metav1.ListOptions{})
+			l, err := c.Pipeline.TektonV1alpha1().TaskRuns("foo").List(metav1.ListOptions{})
 			if err != nil {
 				t.Fatal(err)
 			}

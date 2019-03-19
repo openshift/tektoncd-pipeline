@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/knative/build-pipeline/pkg/names"
+	"github.com/tektoncd/pipeline/pkg/names"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -47,7 +47,7 @@ type GitResource struct {
 	TargetPath string
 }
 
-// NewGitResource create a new git resource to pass to Knative Build
+// NewGitResource create a new git resource to pass to a Task
 func NewGitResource(r *PipelineResource) (*GitResource, error) {
 	if r.Spec.Type != PipelineResourceTypeGit {
 		return nil, fmt.Errorf("GitResource: Cannot create a Git resource from a %s Pipeline Resource", r.Spec.Type)
@@ -113,8 +113,9 @@ func (s *GitResource) GetDownloadContainerSpec() ([]corev1.Container, error) {
 	args = append(args, []string{"-path", dPath}...)
 
 	return []corev1.Container{{
-		Name:       names.SimpleNameGenerator.GenerateName(gitSource + "-" + s.Name),
+		Name:       names.SimpleNameGenerator.RestrictLengthWithRandomSuffix(gitSource + "-" + s.Name),
 		Image:      *gitImage,
+		Command:    []string{"/ko-app/git-init"},
 		Args:       args,
 		WorkingDir: workspaceDir,
 	}}, nil

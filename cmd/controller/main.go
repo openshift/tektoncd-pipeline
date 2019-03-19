@@ -26,19 +26,19 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/knative/build-pipeline/pkg/logging"
+	"github.com/tektoncd/pipeline/pkg/logging"
 
-	"github.com/knative/build-pipeline/pkg/reconciler"
-	"github.com/knative/build-pipeline/pkg/reconciler/v1alpha1/pipelinerun"
-	"github.com/knative/build-pipeline/pkg/reconciler/v1alpha1/taskrun"
-	"github.com/knative/build-pipeline/pkg/system"
 	sharedclientset "github.com/knative/pkg/client/clientset/versioned"
 	"github.com/knative/pkg/controller"
+	"github.com/tektoncd/pipeline/pkg/reconciler"
+	"github.com/tektoncd/pipeline/pkg/reconciler/v1alpha1/pipelinerun"
+	"github.com/tektoncd/pipeline/pkg/reconciler/v1alpha1/taskrun"
+	"github.com/tektoncd/pipeline/pkg/system"
 
-	clientset "github.com/knative/build-pipeline/pkg/client/clientset/versioned"
-	pipelineinformers "github.com/knative/build-pipeline/pkg/client/informers/externalversions"
 	"github.com/knative/pkg/configmap"
 	"github.com/knative/pkg/signals"
+	clientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned"
+	pipelineinformers "github.com/tektoncd/pipeline/pkg/client/informers/externalversions"
 )
 
 const (
@@ -88,7 +88,7 @@ func main() {
 		logger.Fatalf("Error building pipeline clientset: %v", err)
 	}
 
-	configMapWatcher := configmap.NewInformedWatcher(kubeClient, system.Namespace)
+	configMapWatcher := configmap.NewInformedWatcher(kubeClient, system.GetNamespace())
 
 	opt := reconciler.Options{
 		KubeClientSet:     kubeClient,
@@ -102,14 +102,14 @@ func main() {
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, opt.ResyncPeriod)
 	pipelineInformerFactory := pipelineinformers.NewSharedInformerFactory(pipelineClient, opt.ResyncPeriod)
 
-	taskInformer := pipelineInformerFactory.Pipeline().V1alpha1().Tasks()
-	clusterTaskInformer := pipelineInformerFactory.Pipeline().V1alpha1().ClusterTasks()
-	taskRunInformer := pipelineInformerFactory.Pipeline().V1alpha1().TaskRuns()
-	resourceInformer := pipelineInformerFactory.Pipeline().V1alpha1().PipelineResources()
+	taskInformer := pipelineInformerFactory.Tekton().V1alpha1().Tasks()
+	clusterTaskInformer := pipelineInformerFactory.Tekton().V1alpha1().ClusterTasks()
+	taskRunInformer := pipelineInformerFactory.Tekton().V1alpha1().TaskRuns()
+	resourceInformer := pipelineInformerFactory.Tekton().V1alpha1().PipelineResources()
 	podInformer := kubeInformerFactory.Core().V1().Pods()
 
-	pipelineInformer := pipelineInformerFactory.Pipeline().V1alpha1().Pipelines()
-	pipelineRunInformer := pipelineInformerFactory.Pipeline().V1alpha1().PipelineRuns()
+	pipelineInformer := pipelineInformerFactory.Tekton().V1alpha1().Pipelines()
+	pipelineRunInformer := pipelineInformerFactory.Tekton().V1alpha1().PipelineRuns()
 	// Build all of our controllers, with the clients constructed above.
 	controllers := []*controller.Impl{
 		// Pipeline Controllers
@@ -119,6 +119,7 @@ func main() {
 			clusterTaskInformer,
 			resourceInformer,
 			podInformer,
+			nil, //entrypoint cache will be initialized by controller if not provided
 		),
 		pipelinerun.NewController(opt,
 			pipelineRunInformer,

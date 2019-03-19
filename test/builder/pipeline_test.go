@@ -18,9 +18,9 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/knative/build-pipeline/pkg/apis/pipeline/v1alpha1"
-	tb "github.com/knative/build-pipeline/test/builder"
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	tb "github.com/tektoncd/pipeline/test/builder"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -36,6 +36,9 @@ func TestPipeline(t *testing.T) {
 			tb.PipelineTaskRefKind(v1alpha1.ClusterTaskKind),
 			tb.PipelineTaskInputResource("some-repo", "my-only-git-resource", tb.From("foo")),
 			tb.PipelineTaskOutputResource("some-image", "my-only-image-resource"),
+		),
+		tb.PipelineTask("never-gonna", "give-you-up",
+			tb.RunAfter("foo"),
 		),
 	))
 	expectedPipeline := &v1alpha1.Pipeline{
@@ -71,6 +74,10 @@ func TestPipeline(t *testing.T) {
 						Resource: "my-only-image-resource",
 					}},
 				},
+			}, {
+				Name:     "never-gonna",
+				TaskRef:  v1alpha1.TaskRef{Name: "give-you-up"},
+				RunAfter: []string{"foo"},
 			}},
 		},
 	}

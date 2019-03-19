@@ -1,7 +1,7 @@
-# Contributing to Pipeline CRD
+# Contributing to Tekton Pipelines
 
-Welcome to the Pipeline CRD project! Thanks for considering contributing to our
-project and we hope you'll enjoy it :D
+Welcome to the Tekton Pipelines project! Thanks for considering contributing to
+our project and we hope you'll enjoy it :D
 
 **All contributors must comply with
 [the code of conduct](./code-of-conduct.md).**
@@ -38,8 +38,9 @@ Unit test coverage should increase or stay the same with every PR.
 
 This means that most PRs should include both:
 
-- Tests
-- Documentation explaining features being added, including updates to
+- [Tests](https://github.com/tektoncd/pipeline/tree/master/test#tests)
+- [Documentation](https://github.com/tektoncd/pipeline/tree/master/docs)
+  explaining features being added, including updates to
   [DEVELOPMENT.md](./DEVELOPMENT.md) if required
 
 ## Development Process
@@ -79,7 +80,7 @@ You can see more details (including a burndown, issues in epics, etc.) on our
 [zenhub board](https://app.zenhub.com/workspaces/pipelines-5bc61a054b5806bc2bed4fb2/boards?repos=146641150).
 To see this board, you must:
 
-- Ask [an OWNER](OWNER) via [slack](https://knative.slack.com) for an invitation
+- Ask [an OWNER](OWNERS) via [slack](https://knative.slack.com) for an invitation
 - Add [the zenhub browser extension](https://www.zenhub.com/extension) to see
   new info via GitHub (or just use zenhub.com directly)
 
@@ -100,7 +101,7 @@ _See also
 
 Prow is configured in
 [the knative `config.yaml` in `knative/test-infra`](https://github.com/knative/test-infra/blob/master/ci/prow/config.yaml)
-via the sections for `knative/build-pipeline`.
+via the sections for `tektoncd/pipeline`.
 
 ### Prow commands
 
@@ -115,9 +116,9 @@ Before a PR can be merged, it must have both `/lgtm` AND `/approve`:
 - `/lgtm` can be added by anyone in
   [the knative org](https://github.com/orgs/knative/people)
 - `/approve` can be added only by
-  [OWNERS](https://github.com/knative/build-pipeline/blob/master/OWNERS)
+  [OWNERS](https://github.com/tektoncd/pipeline/blob/master/OWNERS)
 
-[OWNERS](https://github.com/knative/build-pipeline/blob/master/OWNERS)
+[OWNERS](https://github.com/tektoncd/pipeline/blob/master/OWNERS)
 automatically get `/approve` but still will need an `/lgtm` to merge.
 
 The merge will happen automatically once the PR has both `/lgtm` and `/approve`,
@@ -184,9 +185,9 @@ you can find something interesting to work on:
 
 - To find issues that we particularly would like contributors to tackle, look
   for
-  [issues with the "help wanted" label](https://github.com/knative/build-pipeline/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22).
+  [issues with the "help wanted" label](https://github.com/tektoncd/pipeline/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22).
 - Issues that are good for new folks will additionally be marked with
-  ["good first issue"](https://github.com/knative/build-pipeline/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
+  ["good first issue"](https://github.com/tektoncd/pipeline/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 
 ### Assigning yourself an issue
 

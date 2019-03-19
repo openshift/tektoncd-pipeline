@@ -20,7 +20,6 @@ import (
 	"time"
 
 	duckv1alpha1 "github.com/knative/pkg/apis/duck/v1alpha1"
-	"github.com/knative/pkg/webhook"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -34,9 +33,6 @@ var (
 		Kind:    pipelineRunControllerName,
 	}
 )
-
-// Assert that TaskRun implements the GenericCRD interface.
-var _ webhook.GenericCRD = (*TaskRun)(nil)
 
 // PipelineRunSpec defines the desired state of PipelineRun
 type PipelineRunSpec struct {
@@ -125,9 +121,18 @@ type PipelineRunStatus struct {
 	// CompletionTime is the time the PipelineRun completed.
 	// +optional
 	CompletionTime *metav1.Time `json:"completionTime,omitempty"`
-	// map of TaskRun Status with the taskRun name as the key
-	//+optional
-	TaskRuns map[string]TaskRunStatus `json:"taskRuns,omitempty"`
+	// map of PipelineRunTaskRunStatus with the taskRun name as the key
+	// +optional
+	TaskRuns map[string]*PipelineRunTaskRunStatus `json:"taskRuns,omitempty"`
+}
+
+// PipelineRunTaskRunStatus contains the name of the PipelineTask for this TaskRun and the TaskRun's Status
+type PipelineRunTaskRunStatus struct {
+	// PipelineTaskName is the name of the PipelineTask
+	PipelineTaskName string `json:"pipelineTaskName"`
+	// Status is the TaskRunStatus for the corresponding TaskRun
+	// +optional
+	Status *TaskRunStatus `json:"status,omitempty"`
 }
 
 var pipelineRunCondSet = duckv1alpha1.NewBatchConditionSet()
@@ -140,7 +145,7 @@ func (pr *PipelineRunStatus) GetCondition(t duckv1alpha1.ConditionType) *duckv1a
 // InitializeConditions will set all conditions in pipelineRunCondSet to unknown for the PipelineRun
 func (pr *PipelineRunStatus) InitializeConditions() {
 	if pr.TaskRuns == nil {
-		pr.TaskRuns = make(map[string]TaskRunStatus)
+		pr.TaskRuns = make(map[string]*PipelineRunTaskRunStatus)
 	}
 	if pr.StartTime.IsZero() {
 		pr.StartTime = &metav1.Time{time.Now()}
@@ -192,7 +197,7 @@ type PipelineTaskRun struct {
 // GetTaskRunRef for pipelinerun
 func (pr *PipelineRun) GetTaskRunRef() corev1.ObjectReference {
 	return corev1.ObjectReference{
-		APIVersion: "build-pipeline.knative.dev/v1alpha1",
+		APIVersion: "build-tekton.dev/v1alpha1",
 		Kind:       "TaskRun",
 		Namespace:  pr.Namespace,
 		Name:       pr.Name,

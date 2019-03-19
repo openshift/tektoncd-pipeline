@@ -16,7 +16,7 @@ limitations under the License.
 package fake
 
 import (
-	v1alpha1 "github.com/knative/build-pipeline/pkg/apis/pipeline/v1alpha1"
+	v1alpha1 "github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
@@ -27,13 +27,13 @@ import (
 
 // FakePipelineRuns implements PipelineRunInterface
 type FakePipelineRuns struct {
-	Fake *FakePipelineV1alpha1
+	Fake *FakeTektonV1alpha1
 	ns   string
 }
 
-var pipelinerunsResource = schema.GroupVersionResource{Group: "pipeline.knative.dev", Version: "v1alpha1", Resource: "pipelineruns"}
+var pipelinerunsResource = schema.GroupVersionResource{Group: "tekton.dev", Version: "v1alpha1", Resource: "pipelineruns"}
 
-var pipelinerunsKind = schema.GroupVersionKind{Group: "pipeline.knative.dev", Version: "v1alpha1", Kind: "PipelineRun"}
+var pipelinerunsKind = schema.GroupVersionKind{Group: "tekton.dev", Version: "v1alpha1", Kind: "PipelineRun"}
 
 // Get takes name of the pipelineRun, and returns the corresponding pipelineRun object, and an error if there is any.
 func (c *FakePipelineRuns) Get(name string, options v1.GetOptions) (result *v1alpha1.PipelineRun, err error) {

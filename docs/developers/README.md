@@ -3,7 +3,7 @@
 This document is aimed at helping maintainers/developers of project understand
 the complexity.
 
-## How are resources shared between tasks?
+## How are resources shared between tasks
 
 `PipelineRun` uses PVC to share resources between tasks. PVC volume is mounted
 on path `/pvc` by PipelineRun.
@@ -33,7 +33,7 @@ creation of a persistent volume could be slower than uploading/downloading files
 to a bucket, or if the the cluster is running in multiple zones, the access to
 the persistent volume can fail.
 
-## How are inputs handled?
+## How are inputs handled
 
 Input resources, like source code (git) or artifacts, are dumped at path
 `/workspace/task_resource_name`. Resource definition in task can have custom
@@ -41,7 +41,7 @@ target directory. If `targetPath` is mentioned in task input then the
 controllers are responsible for adding container definitions to create
 directories and also to fetch the versioned artifacts into that directory.
 
-## How are outputs handled?
+## How are outputs handled
 
 Output resources, like source code (git) or artifacts (storage resource), are
 expected in directory path `/workspace/output/resource_name`.
@@ -111,3 +111,20 @@ expected in directory path `/workspace/output/resource_name`.
         - name: gcs-workspace
           type: storage
   ```
+
+## Entrypoint rewriting and step ordering
+
+`Entrypoint` is injected into the `Task` Container(s), wraps the `Task` step to
+manage the execution order of the containers. The `entrypoint` binary has the
+following arguments:
+
+- `wait_file` - If specified, file to wait for
+- `post_file` - If specified, file to write upon completion
+- `entrypoint` - The command to run in the image being wrapped
+
+As part of the PodSpec created by `TaskRun` the entrypoint for each `Task` step
+is changed to the entrypoint binary with the mentioned arguments and a volume
+with the binary and file(s) is mounted.
+
+If the image is a private registry, the service account should include an
+[ImagePullSecret](https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/#add-imagepullsecrets-to-a-service-account)

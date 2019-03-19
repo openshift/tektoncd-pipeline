@@ -18,10 +18,10 @@ package test
 import (
 	"testing"
 
-	"github.com/knative/build-pipeline/pkg/apis/pipeline/v1alpha1"
-	tb "github.com/knative/build-pipeline/test/builder"
 	knativetest "github.com/knative/pkg/test"
 	"github.com/knative/pkg/test/logging"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	tb "github.com/tektoncd/pipeline/test/builder"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -110,11 +110,11 @@ func getClusterResourceTask(namespace, name, resName, configName string) *v1alph
 			tb.Command("cat"), tb.Args("/workspace/helloworld-cluster/kubeconfig"),
 		),
 		tb.Step("check-config-data", "ubuntu", tb.Command("cat"), tb.Args("/config/test.data"),
-			tb.VolumeMount(corev1.VolumeMount{Name: "config-vol", MountPath: "/config"}),
+			tb.VolumeMount("config-vol", "/config"),
 		),
 		tb.Step("check-contents", "ubuntu",
 			tb.Command("bash"), tb.Args("-c", "cmp -b /workspace/helloworld-cluster/kubeconfig /config/test.data"),
-			tb.VolumeMount(corev1.VolumeMount{Name: "config-vol", MountPath: "/config"}),
+			tb.VolumeMount("config-vol", "/config"),
 		),
 	))
 }

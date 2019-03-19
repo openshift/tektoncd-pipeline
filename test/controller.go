@@ -14,11 +14,11 @@ limitations under the License.
 package test
 
 import (
-	"github.com/knative/build-pipeline/pkg/apis/pipeline/v1alpha1"
-	fakepipelineclientset "github.com/knative/build-pipeline/pkg/client/clientset/versioned/fake"
-	informers "github.com/knative/build-pipeline/pkg/client/informers/externalversions"
-	informersv1alpha1 "github.com/knative/build-pipeline/pkg/client/informers/externalversions/pipeline/v1alpha1"
 	"github.com/knative/pkg/controller"
+	"github.com/tektoncd/pipeline/pkg/apis/pipeline/v1alpha1"
+	fakepipelineclientset "github.com/tektoncd/pipeline/pkg/client/clientset/versioned/fake"
+	informers "github.com/tektoncd/pipeline/pkg/client/informers/externalversions"
+	informersv1alpha1 "github.com/tektoncd/pipeline/pkg/client/informers/externalversions/pipeline/v1alpha1"
 	"go.uber.org/zap/zaptest/observer"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -108,12 +108,12 @@ func SeedTestData(d Data) (Clients, Informers) {
 	kubeInformer := kubeinformers.NewSharedInformerFactory(c.Kube, 0)
 
 	i := Informers{
-		PipelineRun:      sharedInformer.Pipeline().V1alpha1().PipelineRuns(),
-		Pipeline:         sharedInformer.Pipeline().V1alpha1().Pipelines(),
-		TaskRun:          sharedInformer.Pipeline().V1alpha1().TaskRuns(),
-		Task:             sharedInformer.Pipeline().V1alpha1().Tasks(),
-		ClusterTask:      sharedInformer.Pipeline().V1alpha1().ClusterTasks(),
-		PipelineResource: sharedInformer.Pipeline().V1alpha1().PipelineResources(),
+		PipelineRun:      sharedInformer.Tekton().V1alpha1().PipelineRuns(),
+		Pipeline:         sharedInformer.Tekton().V1alpha1().Pipelines(),
+		TaskRun:          sharedInformer.Tekton().V1alpha1().TaskRuns(),
+		Task:             sharedInformer.Tekton().V1alpha1().Tasks(),
+		ClusterTask:      sharedInformer.Tekton().V1alpha1().ClusterTasks(),
+		PipelineResource: sharedInformer.Tekton().V1alpha1().PipelineResources(),
 		Pod:              kubeInformer.Core().V1().Pods(),
 	}
 
