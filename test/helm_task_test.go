@@ -55,6 +55,8 @@ func TestHelmDeployPipelineRun(t *testing.T) {
 	setupClusterBindingForHelm(c, t, namespace)
 	t.Parallel()
 
+    t.Skip("Skipping TestHelmDeployPipelineRun.")
+
 	knativetest.CleanupOnInterrupt(func() { tearDown(t, c, namespace) }, t.Logf)
 	defer tearDown(t, c, namespace)
 
