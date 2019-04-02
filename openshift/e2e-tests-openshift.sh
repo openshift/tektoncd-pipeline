@@ -54,10 +54,6 @@ function resolve_resources(){
   done
 }
 
-function enable_docker_schema2(){
-  oc set env -n default dc/docker-registry REGISTRY_MIDDLEWARE_REPOSITORY_OPENSHIFT_ACCEPTSCHEMA2=true
-}
-
 function create_test_namespace(){
   oc new-project $TEST_YAML_NAMESPACE
   oc policy add-role-to-group system:image-puller system:serviceaccounts:$TEST_YAML_NAMESPACE -n $OPENSHIFT_BUILD_NAMESPACE
@@ -192,8 +188,6 @@ function teardown() {
 }
 
 create_test_namespace
-
-enable_docker_schema2
 
 install_tekton_pipeline
 
