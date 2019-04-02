@@ -82,6 +82,7 @@ func TestPipelineRun(t *testing.T) {
 	}, {
 		name: "service account propagation",
 		testSetup: func(t *testing.T, c *clients, namespace string, index int) {
+			t.Skip("Docker is not available")
 			t.Helper()
 			if _, err := c.KubeClient.Kube.CoreV1().Secrets(namespace).Create(getPipelineRunSecret(index, namespace)); err != nil {
 				t.Fatalf("Failed to create secret `%s`: %s", getName(secretName, index), err)

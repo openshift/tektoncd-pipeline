@@ -73,7 +73,7 @@ function run_go_e2e_tests(){
 function run_yaml_e2e_tests() {
   header "Running YAML e2e tests"
   oc project $TEST_YAML_NAMESPACE
-  resolve_resources test/ tests-resolved.yaml
+  resolve_resources examples/ tests-resolved.yaml
   oc apply -f tests-resolved.yaml
 
   # The rest of this function copied from test/e2e-common.sh#run_yaml_tests()
@@ -108,7 +108,7 @@ function run_yaml_e2e_tests() {
 
 function validate_run() {
   local tests_finished=0
-  for i in {1..60}; do
+  for i in {1..120}; do
     local finished="$(kubectl get $1.tekton.dev --output=jsonpath='{.items[*].status.conditions[*].status}')"
     if [[ ! "$finished" == *"Unknown"* ]]; then
       tests_finished=1
