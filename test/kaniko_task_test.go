@@ -123,13 +123,12 @@ func getTaskRun(namespace string) *v1alpha1.TaskRun {
 
 // TestTaskRun is an integration test that will verify a TaskRun using kaniko
 func TestKanikoTaskRun(t *testing.T) {
-	c, namespace := setup(t)
-	t.Parallel()
-
 	repo, err := getDockerRepo()
 	if err != nil {
-		t.Errorf("Expected to get docker repo")
+		t.Skip("KO_DOCKER_REPO env variable is required")
 	}
+	c, namespace := setup(t)
+	t.Parallel()
 
 	knativetest.CleanupOnInterrupt(func() { tearDown(t, c, namespace) }, t.Logf)
 	defer tearDown(t, c, namespace)
