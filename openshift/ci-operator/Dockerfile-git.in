@@ -3,5 +3,5 @@ FROM registry.svc.ci.openshift.org/openshift/origin-v4.0:base
 
 RUN yum install -y git openssh-client
 
-ADD ${bin} /usr/bin/${bin}
-ENTRYPOINT ["/usr/bin/${bin}"]
+ADD ${bin} /ko-app/${bin}
+ENTRYPOINT ["/ko-app/${bin}"]

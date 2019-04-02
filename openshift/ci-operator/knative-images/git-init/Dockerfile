@@ -3,5 +3,5 @@ FROM registry.svc.ci.openshift.org/openshift/origin-v4.0:base
 
 RUN yum install -y git openssh-client
 
-ADD git-init /usr/bin/git-init
-ENTRYPOINT ["/usr/bin/git-init"]
+ADD git-init /ko-app/git-init
+ENTRYPOINT ["/ko-app/git-init"]

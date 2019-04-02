@@ -3,5 +3,5 @@ FROM registry.svc.ci.openshift.org/openshift/origin-v4.0:base
 
 RUN yum install -y git openssh-client
 
-ADD creds-init /usr/bin/creds-init
-ENTRYPOINT ["/usr/bin/creds-init"]
+ADD creds-init /ko-app/creds-init
+ENTRYPOINT ["/ko-app/creds-init"]
