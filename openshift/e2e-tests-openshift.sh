@@ -9,7 +9,7 @@ readonly OPENSHIFT_REGISTRY="${OPENSHIFT_REGISTRY:-"registry.svc.ci.openshift.or
 readonly TEST_NAMESPACE=tekton-pipeline-tests
 readonly TEST_YAML_NAMESPACE=tekton-pipeline-tests-yaml
 readonly TEKTON_PIPELINE_NAMESPACE=tekton-pipelines
-readonly IGNORES="git-volume|gcs-archive|docker-basic"
+readonly IGNORES="pipelinerun.yaml|private-taskrun.yaml|taskrun.yaml|gcs-resource-spec-taskrun.yaml"
 readonly KO_DOCKER_REPO=image-registry.openshift-image-registry.svc:5000/tektoncd-pipeline
 
 env
@@ -28,16 +28,17 @@ function install_tekton_pipeline(){
 }
 
 function create_pipeline(){
-  resolve_resources config/ tekton-pipeline-resolved.yaml
+  resolve_resources config/ tekton-pipeline-resolved.yaml "nothing"
   oc apply -f tekton-pipeline-resolved.yaml
 }
 
 function resolve_resources(){
   local dir=$1
   local resolved_file_name=$2
+  local ignores=$3
   local registry_prefix="$OPENSHIFT_REGISTRY/$OPENSHIFT_BUILD_NAMESPACE/stable"
   > $resolved_file_name
-  for yaml in $(find $dir -name "*.yaml" | grep -vE $IGNORES); do
+  for yaml in $(find $dir -name "*.yaml" | grep -vE $ignores); do
     echo "---" >> $resolved_file_name
     #first prefix all test images with "test-", then replace all image names with proper repository and prefix images with "tekton-pipeline"
     sed -e 's%\(.* image: \)\(github.com\)\(.*\/\)\(test\/\)\(.*\)%\1\2 \3\4test-\5%' $yaml | \
@@ -69,7 +70,7 @@ function run_go_e2e_tests(){
 function run_yaml_e2e_tests() {
   header "Running YAML e2e tests"
   oc project $TEST_YAML_NAMESPACE
-  resolve_resources examples/ tests-resolved.yaml
+  resolve_resources examples/ tests-resolved.yaml $IGNORES
   oc apply -f tests-resolved.yaml
 
   # The rest of this function copied from test/e2e-common.sh#run_yaml_tests()
