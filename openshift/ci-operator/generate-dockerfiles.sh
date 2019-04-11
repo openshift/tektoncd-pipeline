@@ -8,7 +8,7 @@ function generate_dockefiles() {
   for img in $@; do
     local image_base=$(basename $img)
     mkdir -p $target_dir/$image_base
-    bin=$image_base envsubst < $dockerfile_in > $target_dir/$image_base/Dockerfile
+    bin=$image_base envsubst < $dockerfile_in | sed 's/DOLLAR/$/g'  > $target_dir/$image_base/Dockerfile
   done
 }
 

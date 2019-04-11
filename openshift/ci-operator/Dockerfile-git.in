@@ -1,7 +1,19 @@
 # Do not edit! This file was generated via Makefile
 FROM registry.svc.ci.openshift.org/openshift/origin-v4.0:base
 
+# NOTE(chmou): We use dollar here so that envsubst don't get confused and expand
+# our local PATH.
+ENV HOME=/ko-app PATH=DOLLAR{HOME}:DOLLAR{PATH}
 RUN yum install -y git openssh-client
 
-ADD ${bin} /ko-app/${bin}
+COPY ${bin} DOLLAR{HOME}/${bin}.orig
+COPY uidwrapper DOLLAR{HOME}/${bin}
+
+RUN chgrp -R 0 DOLLAR{HOME} && \
+    chmod -R g=u DOLLAR{HOME} /etc/passwd
+
 ENTRYPOINT ["/ko-app/${bin}"]
+
+# Local Variables:
+# mode: dockerfile
+# End:
