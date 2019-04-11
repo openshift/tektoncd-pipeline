@@ -14,8 +14,9 @@ readonly KO_DOCKER_REPO=image-registry.openshift-image-registry.svc:5000/tektonc
 
 env
 
-function install_tekton_pipeline(){
+function install_tekton_pipeline() {
   header "Installing Tekton Pipeline"
+
   # Grant the necessary privileges to the service accounts Knative will use:
   oc adm policy add-scc-to-user anyuid -z tekton-pipelines-controller -n $TEKTON_PIPELINE_NAMESPACE
   oc adm policy add-cluster-role-to-user cluster-admin -z tekton-pipelines-controller -n $TEKTON_PIPELINE_NAMESPACE
@@ -27,42 +28,42 @@ function install_tekton_pipeline(){
   header "Tekton Pipeline Installed successfully"
 }
 
-function create_pipeline(){
+function create_pipeline() {
   resolve_resources config/ tekton-pipeline-resolved.yaml "nothing"
   oc apply -f tekton-pipeline-resolved.yaml
 }
 
-function resolve_resources(){
+function resolve_resources() {
   local dir=$1
   local resolved_file_name=$2
   local ignores=$3
   local registry_prefix="$OPENSHIFT_REGISTRY/$OPENSHIFT_BUILD_NAMESPACE/stable"
-  > $resolved_file_name
+  >$resolved_file_name
   for yaml in $(find $dir -name "*.yaml" | grep -vE $ignores); do
-    echo "---" >> $resolved_file_name
+    echo "---" >>$resolved_file_name
     #first prefix all test images with "test-", then replace all image names with proper repository and prefix images with "tekton-pipeline"
-    sed -e 's%\(.* image: \)\(github.com\)\(.*\/\)\(test\/\)\(.*\)%\1\2 \3\4test-\5%' $yaml | \
-    sed -e 's%\(.* image: \)\(github.com\)\(.*\/\)\(.*\)%\1 '"$registry_prefix"'\:tektoncd-pipeline-\4%' | \
-    # process these images separately as they're passed as arguments to other containers
-    sed -e 's%github.com/tektoncd/pipeline/cmd/bash%'"$registry_prefix"'\:tektoncd-pipeline-bash%g' | \
-    sed -e 's%github.com/tektoncd/pipeline/cmd/creds-init%'"$registry_prefix"'\:tektoncd-pipeline-creds-init%g' | \
-    sed -e 's%github.com/tektoncd/pipeline/cmd/entrypoint%'"$registry_prefix"'\:tektoncd-pipeline-entrypoint%g' | \
-    sed -e 's%github.com/tektoncd/pipeline/cmd/git-init%'"$registry_prefix"'\:tektoncd-pipeline-git-init%g' | \
-    sed -e 's%github.com/tektoncd/pipeline/cmd/kubeconfigwriter%'"$registry_prefix"'\:tektoncd-pipeline-kubeconfigwriter%g' | \
-    sed -e 's%github.com/tektoncd/pipeline/cmd/nop%'"$registry_prefix"'\:tektoncd-pipeline-nop%g' \
-    >> $resolved_file_name
-    echo >> $resolved_file_name
+    sed -e 's%\(.* image: \)\(github.com\)\(.*\/\)\(test\/\)\(.*\)%\1\2 \3\4test-\5%' $yaml |
+      sed -e 's%\(.* image: \)\(github.com\)\(.*\/\)\(.*\)%\1 '"$registry_prefix"'\:tektoncd-pipeline-\4%' |
+      # process these images separately as they're passed as arguments to other containers
+      sed -e 's%github.com/tektoncd/pipeline/cmd/bash%'"$registry_prefix"'\:tektoncd-pipeline-bash%g' |
+      sed -e 's%github.com/tektoncd/pipeline/cmd/creds-init%'"$registry_prefix"'\:tektoncd-pipeline-creds-init%g' |
+      sed -e 's%github.com/tektoncd/pipeline/cmd/entrypoint%'"$registry_prefix"'\:tektoncd-pipeline-entrypoint%g' |
+      sed -e 's%github.com/tektoncd/pipeline/cmd/git-init%'"$registry_prefix"'\:tektoncd-pipeline-git-init%g' |
+      sed -e 's%github.com/tektoncd/pipeline/cmd/kubeconfigwriter%'"$registry_prefix"'\:tektoncd-pipeline-kubeconfigwriter%g' |
+      sed -e 's%github.com/tektoncd/pipeline/cmd/nop%'"$registry_prefix"'\:tektoncd-pipeline-nop%g' \
+        >>$resolved_file_name
+    echo >>$resolved_file_name
   done
 }
 
-function create_test_namespace(){
+function create_test_namespace() {
   oc new-project $TEST_YAML_NAMESPACE
   oc policy add-role-to-group system:image-puller system:serviceaccounts:$TEST_YAML_NAMESPACE -n $OPENSHIFT_BUILD_NAMESPACE
   oc new-project $TEST_NAMESPACE
   oc policy add-role-to-group system:image-puller system:serviceaccounts:$TEST_NAMESPACE -n $OPENSHIFT_BUILD_NAMESPACE
 }
 
-function run_go_e2e_tests(){
+function run_go_e2e_tests() {
   header "Running Go e2e tests"
   go_test_e2e -ldflags '-X github.com/tektoncd/pipeline/test.missingKoFatal=false' ./test -timeout=20m --kubeconfig $KUBECONFIG || return 1
 }
@@ -80,9 +81,9 @@ function run_yaml_e2e_tests() {
   # Wait for tests to finish.
   echo ">> Waiting for tests to finish"
   for test in taskrun pipelinerun; do
-     if validate_run ${test}; then
+    if validate_run ${test}; then
       echo "ERROR: tests timed out"
-     fi
+    fi
   done
 
   # Check that tests passed.
@@ -132,29 +133,29 @@ function check_results() {
 
 function output_yaml_test_results() {
   # If formatting fails for any reason, use yaml as a fall back.
-  oc get $1.tekton.dev -o=custom-columns-file=${REPO_ROOT_DIR}/test/columns.txt || \
+  oc get $1.tekton.dev -o=custom-columns-file=${REPO_ROOT_DIR}/test/columns.txt ||
     oc get $1.tekton.dev -oyaml
 }
 
 function output_pods_logs() {
-    echo ">>> $1"
-    oc get $1.tekton.dev -o yaml
-    local runs=$(kubectl get $1.tekton.dev --output=jsonpath="{.items[*].metadata.name}")
-    set +e
-    for run in ${runs}; do
-	echo ">>>> $1 ${run}"
-	case "$1" in
-	    "taskrun")
-		go run ./test/logs/main.go -tr ${run}
-		;;
-	    "pipelinerun")
-		go run ./test/logs/main.go -pr ${run}
-		;;
-	esac
-    done
-    set -e
-    echo ">>>> Pods"
-    kubectl get pods -o yaml
+  echo ">>> $1"
+  oc get $1.tekton.dev -o yaml
+  local runs=$(kubectl get $1.tekton.dev --output=jsonpath="{.items[*].metadata.name}")
+  set +e
+  for run in ${runs}; do
+    echo ">>>> $1 ${run}"
+    case "$1" in
+    "taskrun")
+      go run ./test/logs/main.go -tr ${run}
+      ;;
+    "pipelinerun")
+      go run ./test/logs/main.go -pr ${run}
+      ;;
+    esac
+  done
+  set -e
+  echo ">>>> Pods"
+  kubectl get pods -o yaml
 }
 
 function delete_build_pipeline_openshift() {
@@ -174,13 +175,13 @@ function delete_test_resources_openshift() {
   oc delete --ignore-not-found=true -f tests-resolved.yaml
 }
 
- function delete_test_namespace(){
-   echo ">> Deleting test namespace $TEST_NAMESPACE"
-   #oc policy remove-role-from-group system:image-puller system:serviceaccounts:$TEST_NAMESPACE -n $OPENSHIFT_BUILD_NAMESPACE
-   #oc delete project $TEST_NAMESPACE
-   oc policy remove-role-from-group system:image-puller system:serviceaccounts:$TEST_YAML_NAMESPACE -n $OPENSHIFT_BUILD_NAMESPACE
-   oc delete project $TEST_YAML_NAMESPACE
- }
+function delete_test_namespace() {
+  echo ">> Deleting test namespace $TEST_NAMESPACE"
+  #oc policy remove-role-from-group system:image-puller system:serviceaccounts:$TEST_NAMESPACE -n $OPENSHIFT_BUILD_NAMESPACE
+  #oc delete project $TEST_NAMESPACE
+  oc policy remove-role-from-group system:image-puller system:serviceaccounts:$TEST_YAML_NAMESPACE -n $OPENSHIFT_BUILD_NAMESPACE
+  oc delete project $TEST_YAML_NAMESPACE
+}
 
 function teardown() {
   delete_test_namespace
@@ -198,10 +199,10 @@ run_go_e2e_tests || failed=1
 
 run_yaml_e2e_tests || failed=1
 
-(( failed )) && dump_cluster_state
+((failed)) && dump_cluster_state
 
 teardown
 
-(( failed )) && exit 1
+((failed)) && exit 1
 
 success
