@@ -17,10 +17,6 @@ env
 function install_tekton_pipeline() {
   header "Installing Tekton Pipeline"
 
-  # Grant the necessary privileges to the service accounts Knative will use:
-  oc adm policy add-scc-to-user anyuid -z tekton-pipelines-controller -n $TEKTON_PIPELINE_NAMESPACE
-  oc adm policy add-cluster-role-to-user cluster-admin -z tekton-pipelines-controller -n $TEKTON_PIPELINE_NAMESPACE
-
   create_pipeline
 
   wait_until_pods_running $TEKTON_PIPELINE_NAMESPACE || return 1
