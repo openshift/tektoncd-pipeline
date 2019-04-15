@@ -2,7 +2,7 @@
 FROM registry.svc.ci.openshift.org/openshift/origin-v4.0:base
 
 ENV APP_ROOT=/opt/app-root
-ENV PATH=:/Users/chmouel/bin:/usr/local/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/bin:/bin:/Users/chmouel/GIT/go/bin HOME=
+ENV PATH=${APP_ROOT}:${PATH} HOME=${APP_ROOT}
 RUN yum install -y git openssh-client
 
 ADD uidwrapper git-init /ko-app/git-init
