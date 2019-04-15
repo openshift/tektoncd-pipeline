@@ -9,6 +9,7 @@ function generate_dockefiles() {
     local image_base=$(basename $img)
     mkdir -p $target_dir/$image_base
     bin=$image_base envsubst < $dockerfile_in | sed 's/DOLLAR/$/g'  > $target_dir/$image_base/Dockerfile
+    [[ ${dockerfile_in} == *-git.in ]] && install -m755 openshift/ci-operator/uidwrapper $target_dir/$image_base/uidwrapper || continue
   done
 }
 

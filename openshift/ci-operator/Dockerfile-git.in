@@ -8,13 +8,14 @@ ENV APP_ROOT=/opt/app-root
 ENV PATH=DOLLAR{APP_ROOT}:DOLLAR{PATH} HOME=DOLLAR{APP_ROOT}
 RUN yum install -y git openssh-client
 
-ADD uidwrapper ${bin} /ko-app/${bin}
+COPY ${bin} /ko-app/${bin}.orig
+COPY uidwrapper /ko-app/${bin}
 
 RUN chmod -R u+x ${APP_ROOT}/bin && \
     chgrp -R 0 ${APP_ROOT} && \
     chmod -R g=u ${APP_ROOT} /etc/passwd
 
-ENTRYPOINT ["/ko-app/uidwrapper /ko-app/${bin}"]
+ENTRYPOINT ["/ko-app/${bin}"]
 
 # Local Variables:
 # mode: dockerfile
