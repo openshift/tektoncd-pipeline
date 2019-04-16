@@ -1,4 +1,4 @@
-FROM google/cloud-sdk:latest
+FROM registry.access.redhat.com/ubi8-dev-preview/ubi:latest
 
 # Install golang
 RUN curl https://dl.google.com/go/go1.12.1.linux-amd64.tar.gz > go1.12.1.tar.gz
