@@ -6,7 +6,7 @@ CORE_IMAGES=./cmd/bash ./cmd/controller ./cmd/entrypoint ./cmd/gsutil ./cmd/kube
 CORE_IMAGES_WITH_GIT=./cmd/creds-init ./cmd/git-init
 
 # Install core images
-install:
+install: installuidwrapper
 	go install $(CORE_IMAGES) $(CORE_IMAGES_WITH_GIT)
 .PHONY: install
 
@@ -20,3 +20,8 @@ generate-dockerfiles:
 	./openshift/ci-operator/generate-dockerfiles.sh openshift/ci-operator/Dockerfile.in openshift/ci-operator/knative-images $(CORE_IMAGES)
 	./openshift/ci-operator/generate-dockerfiles.sh openshift/ci-operator/Dockerfile-git.in openshift/ci-operator/knative-images $(CORE_IMAGES_WITH_GIT)
 .PHONY: generate-dockerfiles
+
+# NOTE(chmou): Install uidwraper for launching some binaries with fixed uid
+UIDWRAPPER_PATH=./openshift/ci-operator/uidwrapper
+installuidwrapper: $(UIDWRAPPER_PATH)
+	install -m755 $(UIDWRAPPER_PATH) $(GOPATH)/bin/

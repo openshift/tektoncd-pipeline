@@ -17,10 +17,6 @@ env
 function install_tekton_pipeline() {
   header "Installing Tekton Pipeline"
 
-  # Grant the necessary privileges to the service accounts Knative will use:
-  oc adm policy add-scc-to-user anyuid -z tekton-pipelines-controller -n $TEKTON_PIPELINE_NAMESPACE
-  oc adm policy add-cluster-role-to-user cluster-admin -z tekton-pipelines-controller -n $TEKTON_PIPELINE_NAMESPACE
-
   create_pipeline
 
   wait_until_pods_running $TEKTON_PIPELINE_NAMESPACE || return 1
@@ -65,7 +61,7 @@ function create_test_namespace() {
 
 function run_go_e2e_tests() {
   header "Running Go e2e tests"
-  go test -count=1 -tags=e2e -ldflags '-X github.com/tektoncd/pipeline/test.missingKoFatal=false' ./test -timeout=20m --kubeconfig $KUBECONFIG || return 1
+  go test -v -failfast -count=1 -tags=e2e -ldflags '-X github.com/tektoncd/pipeline/test.missingKoFatal=false' ./test -timeout=20m --kubeconfig $KUBECONFIG || return 1
 }
 
 function run_yaml_e2e_tests() {
