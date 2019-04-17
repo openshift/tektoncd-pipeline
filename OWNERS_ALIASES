@@ -11,6 +11,9 @@ aliases:
   - vdemeester
   - evanchooly
   - arilivigni
+  - chmouel
+  - sthaha
+
   build-pipeline-reviewers:
   - alanfx
   - mgencur
@@ -23,3 +26,9 @@ aliases:
   - vdemeester
   - evanchooly
   - arilivigni
+  - chmouel
+  - sthaha
+  - nikhil-thomas
+  - hrishin
+  - piyush-garg
+  - pradeepitm12
