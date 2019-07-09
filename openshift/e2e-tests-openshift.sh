@@ -1,5 +1,5 @@
-#!/bin/sh
-
+#!/usr/bin/env bash
+set -e
 source $(dirname $0)/../vendor/github.com/tektoncd/plumbing/scripts/e2e-tests.sh
 source $(dirname $0)/resolve-yamls.sh
 
@@ -12,8 +12,14 @@ readonly TEST_YAML_NAMESPACE=tekton-pipeline-tests-yaml
 readonly TEKTON_PIPELINE_NAMESPACE=tekton-pipelines
 readonly IGNORES="pipelinerun.yaml|private-taskrun.yaml|taskrun.yaml|gcs-resource-spec-taskrun.yaml"
 readonly KO_DOCKER_REPO=image-registry.openshift-image-registry.svc:5000/tektoncd-pipeline
-
-env
+# Where the CRD will install the pipelines
+readonly TEKTON_NAMESPACE=tekton-pipelines
+# Variable usually set by openshift CI but generating one if not present when running it locally
+readonly OPENSHIFT_BUILD_NAMESPACE=${OPENSHIFT_BUILD_NAMESPACE:-tektoncd-build-$$}
+# Yaml test skipped due of not being able to run on openshift CI, usually becaus
+# of rights.
+# test-git-volume: `"gitRepo": gitRepo volumes are not allowed to be used]'
+declare -ar SKIP_YAML_TEST=(test-git-volume)
 
 function install_tekton_pipeline() {
   header "Installing Tekton Pipeline"
@@ -31,9 +37,11 @@ function create_pipeline() {
 }
 
 function create_test_namespace() {
-  oc new-project $TEST_YAML_NAMESPACE
+  for ns in ${TEKTON_NAMESPACE} ${OPENSHIFT_BUILD_NAMESPACE} ${TEST_YAML_NAMESPACE} ${TEST_NAMESPACE};do
+     oc get project ${ns} >/dev/null 2>/dev/null || oc new-project ${ns}
+  done
+
   oc policy add-role-to-group system:image-puller system:serviceaccounts:$TEST_YAML_NAMESPACE -n $OPENSHIFT_BUILD_NAMESPACE
-  oc new-project $TEST_NAMESPACE
   oc policy add-role-to-group system:image-puller system:serviceaccounts:$TEST_NAMESPACE -n $OPENSHIFT_BUILD_NAMESPACE
 }
 
@@ -96,8 +104,18 @@ function check_results() {
   local failed=0
   results="$(kubectl get $1.tekton.dev --output=jsonpath='{range .items[*]}{.metadata.name}={.status.conditions[*].type}{.status.conditions[*].status}{" "}{end}')"
   for result in ${results}; do
+    reltestname=${result/=*Succeeded*/}
+    skipit=
+    for skip in ${SKIP_YAML_TEST[@]};do
+        [[ ${reltestname} == ${skip} ]] && skipit=True
+    done
+    [[ -n ${skipit} ]] && {
+        echo "INFO: skipping yaml test ${reltestname}"
+        continue
+    }
     if [[ ! "${result,,}" == *"=succeededtrue" ]]; then
       echo "ERROR: test ${result} but should be succeededtrue"
+      kubectl get $1.tekton.dev ${reltestname} -o yaml
       failed=1
     fi
   done
@@ -134,7 +152,6 @@ function output_pods_logs() {
 
 function delete_build_pipeline_openshift() {
   echo ">> Bringing down Build"
-  oc delete --ignore-not-found=true -f tekton-pipeline-resolved.yaml
   # Make sure that are no residual object in the tekton-pipelines namespace.
   oc delete --ignore-not-found=true taskrun.tekton.dev --all -n $TEKTON_PIPELINE_NAMESPACE
   oc delete --ignore-not-found=true pipelinerun.tekton.dev --all -n $TEKTON_PIPELINE_NAMESPACE
@@ -142,6 +159,7 @@ function delete_build_pipeline_openshift() {
   oc delete --ignore-not-found=true clustertask.tekton.dev --all -n $TEKTON_PIPELINE_NAMESPACE
   oc delete --ignore-not-found=true pipeline.tekton.dev --all -n $TEKTON_PIPELINE_NAMESPACE
   oc delete --ignore-not-found=true pipelineresources.tekton.dev --all -n $TEKTON_PIPELINE_NAMESPACE
+  oc delete --ignore-not-found=true -f tekton-pipeline-resolved.yaml
 }
 
 function delete_test_resources_openshift() {
@@ -165,7 +183,10 @@ function teardown() {
 
 create_test_namespace
 
-install_tekton_pipeline
+## If we want to debug the E2E script we don't want to use the images from the
+## CI, let the user do this by herself in the `tekton-pipelines` namespace and
+## use the deployed controller/webhook from there.
+[[ -z ${E2E_DEBUG} ]] && install_tekton_pipeline
 
 failed=0
 
