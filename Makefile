@@ -44,16 +44,4 @@ generate-release:
 	@./openshift/release/generate-release.sh v$(RELEASE_VERSION)
 .PHONY: generate-release
 
-push-image:
-	@test $(RELEASE_VERSION) || { echo "You need to set the RELEASE_VERSION on the command line i.e: make RELEASE_VERSION=0.4.0"; exit ;1;}
-	@set -ex; \
-	for image in $(CORE_IMAGES);do \
-		image=`basename $$image` ; \
-		docker pull $(REGISTRY_CI_URL)-$$image ; \
-		docker tag $(REGISTRY_CI_URL)-$$image $(REGISTRY_RELEASE_URL)-$$image:v$(RELEASE_VERSION) ; \
-		docker tag $(REGISTRY_RELEASE_URL)-$$image:v$(RELEASE_VERSION) $(REGISTRY_RELEASE_URL)-$$image:latest; \
-		docker push $(REGISTRY_RELEASE_URL)-$$image:v$(RELEASE_VERSION) ; \
-		docker push $(REGISTRY_RELEASE_URL)-$$image:latest ; \
-	done
-
 .PHONY: push-image
