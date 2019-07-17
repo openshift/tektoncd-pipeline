@@ -18,9 +18,32 @@ install: installuidwrapper
 .PHONY: install
 
 # Run E2E tests on OpenShift
-test-e2e:
+test-e2e: check-images
 	./openshift/e2e-tests-openshift.sh
 .PHONY: test-e2e
+
+# Make sure we have all images in the makefile variable or that would be a new
+# binary that needs to be added
+check-images:
+	@for cmd in ./cmd/*;do \
+		found="" ;\
+		for image in $(CORE_IMAGES) $(CORE_IMAGES_WITH_GIT);do \
+			if [[ $$image == $$cmd ]];then \
+				found=1 ;\
+			fi \
+		done ;\
+		test -n $$found || { \
+			echo "*ERROR*: Could not find $$cmd in the Makefile variables CORE_IMAGES_WITH_GIT CORE_IMAGES" ;\
+			echo "" ;\
+			echo "If it it's a new binary that was added upstream, then do the following :" ;\
+			echo "- Add the binary to openshift/release like this: https://git.io/fj18c" ;\
+			echo "- Add to the CORE_IMAGES variables in the Makefile" ;\
+			echo "- Generate the dockerfiles by running 'make generate-dockerfiles'" ;\
+			echo "- Commit and PR these to 'openshift/release-next' remote/branch and 'openshift/master'" ;\
+			exit 1 ;\
+		} && exit 0 ;\
+	done
+.PHONY: check-images
 
 # Generate Dockerfiles used by ci-operator. The files need to be committed manually.
 generate-dockerfiles:
