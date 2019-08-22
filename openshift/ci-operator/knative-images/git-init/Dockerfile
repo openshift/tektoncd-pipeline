@@ -4,7 +4,7 @@ FROM registry.access.redhat.com/ubi8/ubi:latest
 # NOTE(chmou): We use dollar here so that envsubst don't get confused and expand
 # our local PATH.
 ENV HOME=/ko-app PATH=${HOME}:${PATH}
-RUN yum install --disableplugin=subscription-manager -y git openssh-client
+RUN yum install --disableplugin=subscription-manager -y git openssh-clients
 
 COPY git-init ${HOME}/git-init.orig
 COPY uidwrapper ${HOME}/git-init
