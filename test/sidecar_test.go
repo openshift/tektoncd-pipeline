@@ -102,7 +102,7 @@ func TestSidecarTaskSupport(t *testing.T) {
 			if err := WaitForPodState(clients, podName, namespace, func(pod *corev1.Pod) (bool, error) {
 				terminatedCount := 0
 				for _, c := range pod.Status.ContainerStatuses {
-					if c.State.Terminated != nil {
+					if c.State.Terminated != nil || c.LastTerminationState.Terminated != nil {
 						terminatedCount++
 					}
 				}
@@ -128,7 +128,7 @@ func TestSidecarTaskSupport(t *testing.T) {
 					}
 				}
 				if c.Name == sidecarContainerName {
-					if c.State.Terminated == nil {
+					if c.State.Terminated == nil && c.LastTerminationState.Terminated == nil {
 						t.Errorf("Sidecar container has a nil Terminated status but non-nil is expected.")
 					} else {
 						sidecarTerminated = true
