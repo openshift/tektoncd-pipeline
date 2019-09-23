@@ -10,7 +10,7 @@ readonly OPENSHIFT_REGISTRY="${OPENSHIFT_REGISTRY:-"registry.svc.ci.openshift.or
 readonly TEST_NAMESPACE=tekton-pipeline-tests
 readonly TEST_YAML_NAMESPACE=tekton-pipeline-tests-yaml
 readonly TEKTON_PIPELINE_NAMESPACE=tekton-pipelines
-readonly IGNORES="pipelinerun.yaml|private-taskrun.yaml|taskrun.yaml|gcs-resource-spec-taskrun.yaml"
+readonly IGNORES="pipelinerun.yaml|private-taskrun.yaml|taskrun.yaml|gcs|taskrun-git-volume.yaml"
 readonly KO_DOCKER_REPO=image-registry.openshift-image-registry.svc:5000/tektoncd-pipeline
 # Where the CRD will install the pipelines
 readonly TEKTON_NAMESPACE=tekton-pipelines
@@ -19,7 +19,9 @@ readonly OPENSHIFT_BUILD_NAMESPACE=${OPENSHIFT_BUILD_NAMESPACE:-tektoncd-build-$
 # Yaml test skipped due of not being able to run on openshift CI, usually becaus
 # of rights.
 # test-git-volume: `"gitRepo": gitRepo volumes are not allowed to be used]'
-declare -ar SKIP_YAML_TEST=(test-git-volume)
+# dind-sidecar-taskrun-1: securityContext.privileged: Invalid value: true: Privileged containers are not allowed]
+# gcs: google container storage
+declare -ar SKIP_YAML_TEST=(test-git-volume dind-sidecar-taskrun-1 build-gcs-targz build-gcs-zip gcs-resource)
 
 function install_tekton_pipeline() {
   header "Installing Tekton Pipeline"
