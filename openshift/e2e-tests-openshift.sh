@@ -10,7 +10,7 @@ readonly OPENSHIFT_REGISTRY="${OPENSHIFT_REGISTRY:-"registry.svc.ci.openshift.or
 readonly TEST_NAMESPACE=tekton-pipeline-tests
 readonly TEST_YAML_NAMESPACE=tekton-pipeline-tests-yaml
 readonly TEKTON_PIPELINE_NAMESPACE=tekton-pipelines
-readonly IGNORES="pipelinerun.yaml|private-taskrun.yaml|taskrun.yaml|gcs|taskrun-git-volume.yaml"
+readonly IGNORES="pipelinerun.yaml|pull-private-image.yaml|build-push-kaniko.yaml|gcs|git-volume.yaml"
 readonly KO_DOCKER_REPO=image-registry.openshift-image-registry.svc:5000/tektoncd-pipeline
 # Where the CRD will install the pipelines
 readonly TEKTON_NAMESPACE=tekton-pipelines
@@ -173,7 +173,9 @@ function delete_build_pipeline_openshift() {
 
 function delete_test_resources_openshift() {
   echo ">> Removing test resources (test/)"
-  oc delete --ignore-not-found=true -f tests-resolved.yaml
+  # ignore any errors while deleting tests-resolved.yaml
+  # some of the resources use `GenerateName` insteead of `Name`
+  oc delete --ignore-not-found=true -f tests-resolved.yaml || true
 }
 
 function delete_test_namespace() {
