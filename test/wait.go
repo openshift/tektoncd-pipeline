@@ -59,7 +59,7 @@ import (
 
 const (
 	interval = 1 * time.Second
-	timeout  = 10 * time.Minute
+	timeout  = 1 * time.Minute
 )
 
 // TaskRunStateFn is a condition function on TaskRun used polling functions
