@@ -2,8 +2,12 @@
 
 CGO_ENABLED=0
 GOOS=linux
-CORE_IMAGES=./cmd/bash ./cmd/controller ./cmd/entrypoint ./cmd/gsutil ./cmd/kubeconfigwriter ./cmd/nop ./cmd/webhook ./cmd/imagedigestexporter ./cmd/pullrequest-init
+CORE_IMAGES=./cmd/bash ./cmd/controller ./cmd/entrypoint ./cmd/gsutil ./cmd/kubeconfigwriter ./cmd/webhook ./cmd/imagedigestexporter ./cmd/pullrequest-init
 CORE_IMAGES_WITH_GIT=./cmd/creds-init ./cmd/git-init
+# For the custom ones that are not auto generated
+CORE_IMAGES_CUSTOMED=./cmd/nop
+
+ALL_IMAGES=$(CORE_IMAGES) $(CORE_IMAGES_CUSTOMED) $(CORE_IMAGES_WITH_GIT)
 
 ##
 # You need to provide a RELEASE_VERSION when using targets like `push-image`, you can do it directly
@@ -14,7 +18,7 @@ REGISTRY_RELEASE_URL=quay.io/openshift-pipeline/tektoncd-pipeline
 
 # Install core images
 install: installuidwrapper
-	go install $(CORE_IMAGES) $(CORE_IMAGES_WITH_GIT)
+	go install $(ALL_IMAGES)
 .PHONY: install
 
 # Run E2E tests on OpenShift
@@ -27,12 +31,12 @@ test-e2e: check-images
 check-images:
 	@notfound="" ;\
 	for cmd in ./cmd/*;do \
-		[[ ! "$(CORE_IMAGES) $(CORE_IMAGES_WITH_GIT)" == *$$cmd* ]] && { \
+		[[ ! "$(ALL_IMAGES)" == *$$cmd* ]] && { \
 			notfound="$$notfound $$cmd " ;\
 		} \
 	done ;\
 	test -z "$$notfound" || { \
-		echo "*ERROR*: Could not find $$notfound in the Makefile variables CORE_IMAGES_WITH_GIT CORE_IMAGES" ;\
+		echo "*ERROR*: Could not find $$notfound in the Makefile variables ALL_IMAGES" ;\
 		echo "" ;\
 		echo "If it it's a new binary that was added upstream, then do the following :" ;\
 		echo "- Add the binary to openshift/release like this: https://git.io/fj18c" ;\
