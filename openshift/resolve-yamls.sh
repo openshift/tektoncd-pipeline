@@ -60,3 +60,17 @@ function resolve_resources() {
       sed -i -r -e "s,github.com/tektoncd/pipeline/vendor/github.com/GoogleCloudPlatform/cloud-builders/gcs-fetcher/cmd/gcs-fetcher,${registry_prefix}:tektoncd-pipeline-gcs-fetcher,g" $resolved_file_name
   fi
 }
+
+function generate_pipeline_resources() {
+    local output_file=$1
+    local image_prefix=$2
+    local image_tag=$3
+
+    resolve_resources config/ $output_file noignore $image_prefix $image_tag
+
+    # Appends addon configs such as prometheus monitoring config
+    for yaml in $(find openshift/addons/ -name "*.yaml" | sort); do
+      echo "---" >> $output_file
+      cat ${yaml} >> $output_file
+    done
+}
