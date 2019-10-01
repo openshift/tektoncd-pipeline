@@ -1,5 +1,5 @@
 # Do not edit! This file was generated via Makefile
-FROM registry.access.redhat.com/ubi8/ubi:latest
+FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
 
 # NOTE(chmou): We use dollar here so that envsubst don't get confused and expand
 # our local PATH.

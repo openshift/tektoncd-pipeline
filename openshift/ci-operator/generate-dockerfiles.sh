@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -x
+# set -x
 
 function generate_dockefiles() {
   local dockerfile_in=$1;

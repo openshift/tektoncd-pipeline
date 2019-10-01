@@ -51,6 +51,8 @@ check-images:
 generate-dockerfiles:
 	./openshift/ci-operator/generate-dockerfiles.sh openshift/ci-operator/Dockerfile.in openshift/ci-operator/knative-images $(CORE_IMAGES)
 	./openshift/ci-operator/generate-dockerfiles.sh openshift/ci-operator/Dockerfile-git.in openshift/ci-operator/knative-images $(CORE_IMAGES_WITH_GIT)
+	@echo "There is some custom images that are only updated manually in:"; \
+	echo "	$(CORE_IMAGES_CUSTOMED)";\
 .PHONY: generate-dockerfiles
 
 # NOTE(chmou): Install uidwraper for launching some binaries with fixed uid

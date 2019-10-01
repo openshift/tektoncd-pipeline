@@ -1,5 +1,4 @@
-# Do not edit! This file was generated via Makefile
-FROM registry.access.redhat.com/ubi8/ubi:latest
+FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
 
 # NOTE(chmou): *BEWARE YOU ARE ENTERING IN A WORLD OF UGLY HACK#.
 # Sidecar is currently broken with a nop image that's not based on google's
