@@ -13,4 +13,4 @@ else
     tag=$release
 fi
 
-resolve_resources config/ $output_file noignore $image_prefix $tag
+generate_pipeline_resource $output_file $image_prefix $tag

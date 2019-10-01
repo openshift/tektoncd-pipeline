@@ -53,3 +53,16 @@ function resolve_resources() {
     echo >>$resolved_file_name
   done
 }
+
+function generate_pipeline_resource() {
+    local output_file=$1
+    local image_prefix=$2
+    local image_tag=$3
+
+    resolve_resources config/ $output_file noignore $image_prefix $image_tag
+
+    # Appends addon configs such as prometheus monitoring config
+    for yaml in $(find openshift/addon-config/ -name "*yaml"); do
+      cat ${yaml} >> $output_file
+    done
+}
