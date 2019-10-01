@@ -54,7 +54,7 @@ function resolve_resources() {
   done
 }
 
-function generate_pipeline_resource() {
+function generate_pipeline_resources() {
     local output_file=$1
     local image_prefix=$2
     local image_tag=$3

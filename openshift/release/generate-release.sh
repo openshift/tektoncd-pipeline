@@ -13,4 +13,4 @@ else
     tag=$release
 fi
 
-generate_pipeline_resource $output_file $image_prefix $tag
+generate_pipeline_resources $output_file $image_prefix $tag

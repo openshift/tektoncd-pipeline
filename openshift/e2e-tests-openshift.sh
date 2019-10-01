@@ -34,7 +34,7 @@ function install_tekton_pipeline() {
 }
 
 function create_pipeline() {
-  generate_pipeline_resource tekton-pipeline-resolved.yaml $OPENSHIFT_REGISTRY/$OPENSHIFT_BUILD_NAMESPACE/stable
+  generate_pipeline_resources tekton-pipeline-resolved.yaml $OPENSHIFT_REGISTRY/$OPENSHIFT_BUILD_NAMESPACE/stable
   oc apply -f tekton-pipeline-resolved.yaml
 }
 
