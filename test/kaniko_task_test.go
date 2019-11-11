@@ -156,6 +156,7 @@ func getTask(repo, namespace string) *v1alpha1.Task {
 func getTaskRun(namespace string) *v1alpha1.TaskRun {
 	return tb.TaskRun(kanikoTaskRunName, namespace, tb.TaskRunSpec(
 		tb.TaskRunTaskRef(kanikoTaskName),
+		tb.TaskRunServiceAccountName("default"),
 		tb.TaskRunTimeout(2*time.Minute),
 		tb.TaskRunInputs(tb.TaskRunInputsResource("gitsource", tb.TaskResourceBindingRef(kanikoGitResourceName))),
 		tb.TaskRunOutputs(tb.TaskRunOutputsResource("builtImage", tb.TaskResourceBindingRef(kanikoImageResourceName))),
