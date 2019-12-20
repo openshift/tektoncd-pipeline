@@ -28,6 +28,7 @@ function install_tekton_pipeline() {
 
   create_pipeline
 
+  alias kubectl=oc
   wait_until_pods_running $TEKTON_PIPELINE_NAMESPACE || {
     oc -n $TEKTON_PIPELINE_NAMESPACE get deployments
     sleep 30m
