@@ -28,7 +28,11 @@ function install_tekton_pipeline() {
 
   create_pipeline
 
-  wait_until_pods_running $TEKTON_PIPELINE_NAMESPACE || return 1
+  wait_until_pods_running $TEKTON_PIPELINE_NAMESPACE || {
+    oc -n $TEKTON_PIPELINE_NAMESPACE get deployments
+    sleep 30m
+    return 1
+  }
 
   header "Tekton Pipeline Installed successfully"
 }
