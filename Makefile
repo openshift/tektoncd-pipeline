@@ -1,6 +1,3 @@
-#This makefile is used by ci-operator
-
-CGO_ENABLED=0
 GOOS=linux
 CORE_IMAGES=./cmd/controller ./cmd/entrypoint ./cmd/kubeconfigwriter ./cmd/webhook ./cmd/imagedigestexporter ./cmd/pullrequest-init
 CORE_IMAGES_WITH_GIT=./cmd/creds-init ./cmd/git-init
@@ -16,7 +13,7 @@ REGISTRY_RELEASE_URL=quay.io/openshift-pipeline/tektoncd-pipeline
 
 # Install core images
 install: installuidwrapper
-	go install $(ALL_IMAGES)
+	@env CGO_ENABLED=0 go install $(ALL_IMAGES)
 .PHONY: install
 
 # Run E2E tests on OpenShift
