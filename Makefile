@@ -13,7 +13,7 @@ REGISTRY_RELEASE_URL=quay.io/openshift-pipeline/tektoncd-pipeline
 
 # Install core images
 install: installuidwrapper
-	@env CGO_ENABLED=0 go -tags="disable_gcp" install $(ALL_IMAGES)
+	@env CGO_ENABLED=0 go install -tags="disable_gcp" $(ALL_IMAGES)
 .PHONY: install
 
 # Run E2E tests on OpenShift
