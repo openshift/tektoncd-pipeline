@@ -49,7 +49,7 @@ function create_test_namespace() {
 
 function run_go_e2e_tests() {
   header "Running Go e2e tests"
-  go test -v -failfast -count=1 -tags=e2e -ldflags '-X github.com/tektoncd/pipeline/test.missingKoFatal=false -X github.com/tektoncd/pipeline/test.skipRootUserTests=true' ./test -timeout=20m --kubeconfig $KUBECONFIG || return 1
+  go test -v -failfast -count=1 -tags=e2e -ldflags '-X github.com/tektoncd/pipeline/test.missingKoFatal=false -X github.com/tektoncd/pipeline/test.skipRootUserTests=true' ./test -timeout=30m --kubeconfig $KUBECONFIG || return 1
 }
 
 function run_yaml_e2e_tests() {
