@@ -1,0 +1,22 @@
+aliases:
+  build-pipeline-approvers:
+  - mgencur
+  - jcrossley3
+  - markusthoemmes
+  - vdemeester
+  - arilivigni
+  - chmouel
+  - sthaha
+
+  build-pipeline-reviewers:
+  - mgencur
+  - jcrossley3
+  - markusthoemmes
+  - vdemeester
+  - arilivigni
+  - chmouel
+  - sthaha
+  - nikhil-thomas
+  - hrishin
+  - piyush-garg
+  - pradeepitm12
