@@ -6,7 +6,7 @@ source $(dirname $0)/resolve-yamls.sh
 set -x
 
 readonly API_SERVER=$(oc config view --minify | grep server | awk -F'//' '{print $2}' | awk -F':' '{print $1}')
-readonly OPENSHIFT_REGISTRY="${OPENSHIFT_REGISTRY:-"registry.svc.ci.openshift.org"}"
+readonly OPENSHIFT_REGISTRY_PREFIX="${OPENSHIFT_REGISTRY_PREFIX:-${IMAGE_FORMAT//:\$\{component\}/}}"
 readonly TEST_NAMESPACE=tekton-pipeline-tests
 readonly TEST_YAML_NAMESPACE=tekton-pipeline-tests-yaml
 readonly TEKTON_PIPELINE_NAMESPACE=tekton-pipelines
@@ -34,7 +34,7 @@ function install_tekton_pipeline() {
 }
 
 function create_pipeline() {
-  generate_pipeline_resources tekton-pipeline-resolved.yaml $OPENSHIFT_REGISTRY/$OPENSHIFT_BUILD_NAMESPACE/stable
+  generate_pipeline_resources tekton-pipeline-resolved.yaml $OPENSHIFT_REGISTRY_PREFIX
   oc apply -f tekton-pipeline-resolved.yaml
 }
 
@@ -56,7 +56,7 @@ function run_go_e2e_tests() {
 function run_yaml_e2e_tests() {
   header "Running YAML e2e tests"
   oc project $TEST_YAML_NAMESPACE
-  resolve_resources examples/ tests-resolved.yaml $IGNORES $OPENSHIFT_REGISTRY/$OPENSHIFT_BUILD_NAMESPACE/stable
+  resolve_resources examples/ tests-resolved.yaml $IGNORES $OPENSHIFT_REGISTRY_PREFIX
   oc apply -f tests-resolved.yaml
 
   # The rest of this function copied from test/e2e-common.sh#run_yaml_tests()
