@@ -1,185 +1,83 @@
-MODULE   = $(shell env GO111MODULE=on $(GO) list -m)
-DATE    ?= $(shell date +%FT%T%z)
-VERSION ?= $(shell git describe --tags --always --dirty --match=v* 2> /dev/null || \
-			cat $(CURDIR)/.version 2> /dev/null || echo v0)
-PKGS     = $(or $(PKG),$(shell env GO111MODULE=on $(GO) list ./...))
-TESTPKGS = $(shell env GO111MODULE=on $(GO) list -f \
-			'{{ if or .TestGoFiles .XTestGoFiles }}{{ .ImportPath }}{{ end }}' \
-			$(PKGS))
-BIN      = $(CURDIR)/.bin
+GOOS=linux
+CORE_IMAGES=./cmd/controller ./cmd/entrypoint ./cmd/kubeconfigwriter ./cmd/webhook ./cmd/imagedigestexporter ./cmd/pullrequest-init
+CORE_IMAGES_WITH_GIT=./cmd/creds-init ./cmd/git-init
+ADDN_IMAGES=./vendor/github.com/GoogleCloudPlatform/cloud-builders/gcs-fetcher/cmd/gcs-fetcher
+ALL_IMAGES=$(CORE_IMAGES) $(CORE_IMAGES_WITH_GIT) $(ADDN_IMAGES)
 
-GOLANGCI_VERSION = v1.25.0
-GOSEC_VERSION    = v2.3.0
+##
+# You need to provide a RELEASE_VERSION when using targets like `push-image`, you can do it directly
+# on the command like this: `make push-image RELEASE_VERSION=0.4.0`
+RELEASE_VERSION=
+REGISTRY_CI_URL=registry.svc.ci.openshift.org/openshift/tektoncd-v$(RELEASE_VERSION):tektoncd-pipeline
+REGISTRY_RELEASE_URL=quay.io/openshift-pipeline/tektoncd-pipeline
 
-GO           = go
-TIMEOUT_UNIT = 5m
-TIMEOUT_E2E  = 20m
-V = 0
-Q = $(if $(filter 1,$V),,@)
-M = $(shell printf "\033[34;1m🐱\033[0m")
+# Install core images
+install: installuidwrapper
+	@env CGO_ENABLED=0 go install -tags="disable_gcp" $(ALL_IMAGES)
+.PHONY: install
 
-export GO111MODULE=on
+# Run E2E tests on OpenShift
+test-e2e: check-images
+	./openshift/e2e-tests-openshift.sh
+.PHONY: test-e2e
 
-.PHONY: all
-all: fmt lint | $(BIN) ; $(info $(M) building executable…) @ ## Build program binary
-	$Q $(GO) build \
-		-tags release \
-		-ldflags '-X $(MODULE)/cmd.Version=$(VERSION) -X $(MODULE)/cmd.BuildDate=$(DATE)' \
-		-o $(BIN)/$(basename $(MODULE)) main.go
+# Make sure we have all images in the makefile variable or that would be a new
+# binary that needs to be added
+check-images:
+	@notfound="" ;\
+	for cmd in ./cmd/*;do \
+		[[ ! "$(ALL_IMAGES)" == *$$cmd* ]] && { \
+			notfound="$$notfound $$cmd " ;\
+		} \
+	done ;\
+	test -z "$$notfound" || { \
+		echo "*ERROR*: Could not find $$notfound in the Makefile variables ALL_IMAGES" ;\
+		echo "" ;\
+		echo "If it it's a new binary that was added upstream, then do the following :" ;\
+		echo "- Add the binary to openshift/release like this: https://git.io/fj18c" ;\
+		echo "- Add to the CORE_IMAGES variables in the Makefile" ;\
+		echo "- Generate the dockerfiles by running 'make generate-dockerfiles'" ;\
+		echo "- Commit and PR these to 'openshift/release-next' remote/branch and 'openshift/master'" ;\
+		echo "- Make sure the images are added in the nightly quay jobs https://git.io/Jeu1I" ;\
+		echo "" ;\
+		exit 1 ;\
+	}
+	@notfound="" ;\
+	for cmd in $(ALL_IMAGES);do \
+		[[ -d $$cmd ]] || { \
+			echo "*ERROR*: $$cmd seems to have been removed from upstream" ;\
+			echo "" ;\
+			echo "- Remove the image name in one of the Makefile variable" ;\
+			echo "- Remove the image from the openshfit/release nightly https://git.io/Jez1j and variant https://git.io/JezMv" ;\
+			echo "- Remove the directory from openshift/ci-operator/tekton-images/" ;\
+			echo "- Remove the image from the nightly quay job: https://git.io/Jeu1I" ;\
+			echo "" ;\
+			exit 1 ;\
+		} ;\
+	done
+.PHONY: check-images
 
-$(BIN):
-	@mkdir -p $@
-$(BIN)/%: | $(BIN) ; $(info $(M) building $(PACKAGE)…)
-	$Q tmp=$$(mktemp -d); \
-	   env GO111MODULE=off GOPATH=$$tmp GOBIN=$(BIN) $(GO) get $(PACKAGE) \
-		|| ret=$$?; \
-	   rm -rf $$tmp ; exit $$ret
+# Generate Dockerfiles used by ci-operator. The files need to be committed manually.
+generate-dockerfiles:
+	@./openshift/ci-operator/generate-dockerfiles.sh openshift/ci-operator/Dockerfile.in openshift/ci-operator/tekton-images $(CORE_IMAGES)
+	@./openshift/ci-operator/generate-dockerfiles.sh openshift/ci-operator/Dockerfile.in openshift/ci-operator/tekton-images $(ADDN_IMAGES)
+	@./openshift/ci-operator/generate-dockerfiles.sh openshift/ci-operator/Dockerfile-git.in openshift/ci-operator/tekton-images $(CORE_IMAGES_WITH_GIT)
+.PHONY: generate-dockerfiles
 
-FORCE:
+# NOTE(chmou): Install uidwraper for launching some binaries with fixed uid
+UIDWRAPPER_PATH=./openshift/ci-operator/uidwrapper
+installuidwrapper: $(UIDWRAPPER_PATH)
+	install -m755 $(UIDWRAPPER_PATH) $(GOPATH)/bin/
 
-bin/%: cmd/% FORCE
-	$(GO) build -mod=vendor $(LDFLAGS) -v -o $@ ./$<
+# Generates a ci-operator configuration for a specific branch.
+generate-ci-config:
+	./openshift/ci-operator/generate-ci-config.sh $(BRANCH) > ci-operator-config.yaml
+.PHONY: generate-ci-config
 
-KO = $(BIN)/ko
-$(BIN)/ko: PACKAGE=github.com/google/ko/cmd/ko
+# Generate an aggregated knative yaml file with replaced image references
+generate-release:
+	@test $(RELEASE_VERSION) || { echo "You need to set the RELEASE_VERSION on the command line i.e: make RELEASE_VERSION=0.4.0"; exit 1;}
+	@./openshift/release/generate-release.sh v$(RELEASE_VERSION)
+.PHONY: generate-release
 
-.PHONY: apply
-apply: | $(KO) ; $(info $(M) ko apply -f config/) @ ## Apply config to the current cluster
-	$Q $(KO) apply -f config
-
-.PHONY: resolve
-resolve: | $(KO) ; $(info $(M) ko resolve -f config/) @ ## Resolve config to the current cluster
-	$Q $(KO) resolve --push=false --oci-layout-path=$(BIN)/oci -f config
-
-.PHONY: generated
-generated: | vendor ; $(info $(M) update generated files) ## Update generated files
-	$Q ./hack/update-codegen.sh
-
-.PHONY: vendor
-vendor:
-	$Q ./hack/update-deps.sh
-
-## Tests
-TEST_UNIT_TARGETS := test-unit-verbose test-unit-race
-test-unit-verbose: ARGS=-v
-test-unit-race:    ARGS=-race
-$(TEST_UNIT_TARGETS): test-unit
-.PHONY: $(TEST_UNIT_TARGETS) test-unit
-test-unit: ## Run unit tests
-	$(GO) test -timeout $(TIMEOUT_UNIT) $(ARGS) ./...
-
-TEST_E2E_TARGETS := test-e2e-short test-e2e-verbose test-e2e-race
-test-e2e-short:   ARGS=-short
-test-e2e-verbose: ARGS=-v
-test-e2e-race:    ARGS=-race
-$(TEST_E2E_TARGETS): test-e2e
-.PHONY: $(TEST_E2E_TARGETS) test-e2e
-test-e2e:  ## Run end-to-end tests
-	$(GO) test -timeout $(TIMEOUT_E2E) -tags e2e $(ARGS) ./test/...
-
-.PHONY: test-yamls
-test-yamls: ## Run yaml tests
-	./test/e2e-tests-yaml.sh --run-tests
-
-.PHONY: check tests
-check tests: test-unit test-e2e test-yamls
-
-RAM = $(BIN)/ram
-$(BIN)/ram: PACKAGE=go.sbr.pm/ram
-
-.PHONY: watch-test
-watch-test: | $(RAM) ; $(info $(M) watch and run tests) @ ## Watch and run tests
-	$Q $(RAM) -- -failfast
-
-.PHONY: watch-resolve
-watch-resolve: | $(KO) ; $(info $(M) watch and resolve config) @ ## Watch and build to the current cluster
-	$Q $(KO) resolve -W --push=false --oci-layout-path=$(BIN)/oci -f config 1>/dev/null
-
-.PHONY: watch-config
-watch-config: | $(KO) ; $(info $(M) watch and apply config) @ ## Watch and apply to the current cluster
-	$Q $(KO) apply -W -f config
-
-## Linters configuration and targets
-# TODO(vdemeester) gofmt and goimports checks (run them with -w and make a diff)
-
-GOLINT = $(BIN)/golint
-$(BIN)/golint: PACKAGE=golang.org/x/lint/golint
-
-.PHONY: golint
-golint: | $(GOLINT) ; $(info $(M) running golint…) @ ## Run golint
-	$Q $(GOLINT) -set_exit_status $(PKGS)
-
-.PHONY: vet
-vet: | ; $(info $(M) running go vet…) @ ## Run go vet
-	$Q go vet ./...
-
-INEFFASSIGN = $(BIN)/ineffassign
-$(BIN)/ineffassign: PACKAGE=github.com/gordonklaus/ineffassign
-
-.PHONY: ineffassign
-ineffassign: | $(INEFFASSIGN) ; $(info $(M) running static ineffassign…) @ ## Run ineffassign
-	$Q $(INEFFASSIGN) .
-
-STATICCHECK = $(BIN)/staticcheck
-$(BIN)/staticcheck: PACKAGE=honnef.co/go/tools/cmd/staticcheck
-
-.PHONY: staticcheck
-staticcheck: | $(STATICCHECK) ; $(info $(M) running static check…) @ ## Run staticcheck
-	$Q $(STATICCHECK) ./...
-
-DUPL = $(BIN)/dupl
-$(BIN)/dupl: PACKAGE=github.com/mibk/dupl
-
-.PHONY: dupl
-dupl: | $(DUPL) ; $(info $(M) running dupl…) ## Run dupl
-	$Q $(DUPL)
-
-ERRCHECK = $(BIN)/errcheck
-$(BIN)/errcheck: PACKAGE=github.com/kisielk/errcheck
-
-.PHONY: errcheck
-errcheck: | $(ERRCHECK) ; $(info $(M) running errcheck…) ## Run errcheck
-	$Q $(ERRCHECK) ./...
-
-GOLANGCILINT = $(BIN)/golangci-lint
-$(BIN)/golangci-lint: ; $(info $(M) getting golangci-lint $(GOLANGCI_VERSION))
-	@curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(BIN) $(GOLANGCI_VERSION)
-
-.PHONY: golangci-lint
-golangci-lint: | $(GOLANGCILINT) ; $(info $(M) running golangci-lint…) @ ## Run golangci-lint
-	$Q $(GOLANGCILINT) run --modules-download-mode=vendor --max-issues-per-linter=0 --max-same-issues=0 --deadline 5m
-
-GOSEC = $(BIN)/gosec
-$(BIN)/gosec: ; $(info $(M) getting gosec $(GOSEC_VERSION))
-	@curl -sfL https://raw.githubusercontent.com/securego/gosec/master/install.sh | sh -s -- -b $(BIN) $(GOSEC_VERSION)
-
-.PHONY: gosec
-gosec: | $(GOSEC) ; $(info $(M) running gosec…)
-	$Q $(GOSEC) ./...
-
-GOIMPORTS = $(BIN)/goimports
-$(BIN)/goimports: PACKAGE=golang.org/x/tools/cmd/goimports
-
-.PHONY: goimports
-goimports: | $(GOIMPORTS) ; $(info $(M) running goimports…) ## Run goimports
-	$Q $(GOIMPORTS) -l -e -w pkg cmd test
-
-.PHONY: fmt
-fmt: ; $(info $(M) running gofmt…) @ ## Run gofmt on all source files
-	$Q $(GO) fmt $(PKGS)
-
-# Misc
-
-.PHONY: clean
-clean: ; $(info $(M) cleaning…)	@ ## Cleanup everything
-	@rm -rf $(BIN)
-	@rm -rf test/tests.* test/coverage.*
-
-.PHONY: help
-help:
-	@grep -hE '^[ a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-17s\033[0m %s\n", $$1, $$2}'
-
-.PHONY: version
-version:
-	@echo $(VERSION)
+.PHONY: push-image
