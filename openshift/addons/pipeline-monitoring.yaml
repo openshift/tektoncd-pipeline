@@ -55,11 +55,12 @@ metadata:
   namespace: tekton-pipelines
 spec:
   endpoints:
-    - interval: 10s
-      port: metrics
+  - interval: 10s
+    port: http-metrics
+  jobLabel: app
   namespaceSelector:
     matchNames:
-      - openshift-pipelines
+    - openshift-pipelines
   selector:
     matchLabels:
       app: tekton-pipelines-controller
