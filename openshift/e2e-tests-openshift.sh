@@ -49,11 +49,14 @@ function create_test_namespace() {
 
 function run_go_e2e_tests() {
   header "Running Go e2e tests"
+  breakPoint startE2ETest1
   go test -v -failfast -count=1 -tags=e2e -ldflags '-X github.com/tektoncd/pipeline/test.missingKoFatal=false' ./test -skipRootUserTests=true -timeout=20m --kubeconfig $KUBECONFIG || return 1
+  breakPoint startE2ETest2
   go test -v -failfast -count=1 -tags=e2e -ldflags '-X github.com/tektoncd/pipeline/test/v1alpha1.missingKoFatal=false' ./test/v1alpha1 -skipRootUserTests=true -timeout=20m --kubeconfig $KUBECONFIG || return 1
 }
 
 function run_yaml_e2e_tests() {
+  breakPoint startValidateE2ETests
   header "Running YAML e2e tests"
   oc project $TEST_YAML_NAMESPACE
   resolve_resources examples/ tests-resolved.yaml $IGNORES $OPENSHIFT_REGISTRY_PREFIX
@@ -72,6 +75,7 @@ function run_yaml_e2e_tests() {
   done
 
   # Check that tests passed.
+  breakPoint startCheckE2ETestResults
   echo ">> Checking test results"
   for test in taskrun pipelinerun; do
     if check_results ${test}; then
@@ -81,6 +85,7 @@ function run_yaml_e2e_tests() {
   done
 
   # it failed, display logs
+  breakPoint startPrintLogs
   for test in taskrun pipelinerun; do
     echo "<< State and Logs for ${test}"
     output_yaml_test_results ${test}
@@ -186,12 +191,25 @@ function teardown() {
   delete_build_pipeline_openshift
 }
 
+function breakPoint() {
+  waitFileName=${1:-waitFile}
+  while [[ ! -f ${waitFileName} ]];
+  do
+    sleep 10;
+    echo \*\* --------------------------------------- \*\*
+    echo \*\* breakPoint                              \*\*;
+    echo \*\* run \`touch ${waitFileName}\` to resume \*\*
+  done
+}
+
 create_test_namespace
 
 ## If we want to debug the E2E script we don't want to use the images from the
 ## CI, let the user do this by herself in the `tekton-pipelines` namespace and
 ## use the deployed controller/webhook from there.
 [[ -z ${E2E_DEBUG} ]] && install_tekton_pipeline
+
+breakPoint waitAfterInstall
 
 failed=0
 
@@ -201,6 +219,7 @@ run_yaml_e2e_tests || failed=1
 
 ((failed)) && dump_cluster_state
 
+breakPoint waitBeforeTearDown
 teardown
 
 ((failed)) && exit 1
