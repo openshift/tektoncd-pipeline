@@ -64,6 +64,11 @@ function resolve_resources() {
 
     cat ${TMP} >> $resolved_file_name
 
+    # Fix to ill formated images
+    # dynamically get the Build image reference on each pr's before running yaml tests
+    # Eg: gcr.io/tekton-releases/registry.svc.ci.openshift.org/ci-op-qy1fnwv7/stable:tektoncd-pipeline-git-init:v0.11.3 --> registry.svc.ci.openshift.org/ci-op-qy1fnwv7/stable:tektoncd-pipeline-git-init
+    sed -i -r -e "s,gcr.io/tekton-releases/${registry_prefix}:tektoncd-pipeline-${image_regexp}(.*),${registry_prefix}:tektoncd-pipeline-\1,g" $resolved_file_name
+
     echo >>$resolved_file_name
   done
 
