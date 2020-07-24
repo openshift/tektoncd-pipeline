@@ -1,0 +1,38 @@
+From cd0c10a3a1eaae979121959146b439c9aa373e62 Mon Sep 17 00:00:00 2001
+From: Chmouel Boudjnah <chmouel@redhat.com>
+Date: Fri, 17 Apr 2020 08:48:19 +0200
+Subject: [PATCH] Remove TestTaskRunRetry, too much flakyness
+
+Signed-off-by: Chmouel Boudjnah <chmouel@redhat.com>
+---
+ test/retry_test.go          | 1 +
+ test/v1alpha1/retry_test.go | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/test/retry_test.go b/test/retry_test.go
+index cce0874b8..3169c2016 100644
+--- a/test/retry_test.go
++++ b/test/retry_test.go
+@@ -33,6 +33,7 @@ import (
+ // TestTaskRunRetry tests that retries behave as expected, by creating multiple
+ // Pods for the same TaskRun each time it fails, up to the configured max.
+ func TestTaskRunRetry(t *testing.T) {
++	t.Skip("Flaky")
+ 	c, namespace := setup(t)
+ 	knativetest.CleanupOnInterrupt(func() { tearDown(t, c, namespace) }, t.Logf)
+ 	defer tearDown(t, c, namespace)
+diff --git a/test/v1alpha1/retry_test.go b/test/v1alpha1/retry_test.go
+index ab7add104..a6116c6aa 100644
+--- a/test/v1alpha1/retry_test.go
++++ b/test/v1alpha1/retry_test.go
+@@ -34,6 +34,7 @@ import (
+ // TestTaskRunRetry tests that retries behave as expected, by creating multiple
+ // Pods for the same TaskRun each time it fails, up to the configured max.
+ func TestTaskRunRetry(t *testing.T) {
++	t.Skip("Flaky")
+ 	c, namespace := setup(t)
+ 	knativetest.CleanupOnInterrupt(func() { tearDown(t, c, namespace) }, t.Logf)
+ 	defer tearDown(t, c, namespace)
+-- 
+2.25.0
+
