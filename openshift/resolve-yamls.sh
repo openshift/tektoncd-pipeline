@@ -32,9 +32,8 @@ function resolve_resources() {
         #
         # NOTE(chmou): We are using our owns stuff for external images :
         #
-        # tianon/true@sha* => openshift/ci-operator/tekton-images/nop/Dockerfile
         # gcr.io/distroless/base@sha* => registry.access.redhat.com/ubi8/ubi-minimal:latest \
-        sed -e "s,ko://,,g"  -e "s%tianon/true.*\(\"\)%${registry_prefix}-nop:${image_tag}\1%" \
+        sed -e "s,ko://,,g" \
             -e "s%gcr.io/distroless/base.*\(\"\)%registry.access.redhat.com/ubi8/ubi-minimal:latest\1%" \
             -e "s%\(.* image:\)\(github.com\)\(.*\/\)\(.*\)%\1 ${registry_prefix}-\4:${image_tag}%" $yaml \
             -r -e "s,github.com/tektoncd/pipeline/cmd/${image_regexp},${registry_prefix}-\1:${image_tag},g" \
@@ -48,9 +47,8 @@ function resolve_resources() {
         #
         # NOTE(chmou): We are using our owns stuff for external images :
         #
-        # tianon/true@sha* => openshift/ci-operator/tekton-images/nop/Dockerfile
         # gcr.io/distroless/base@sha* => registry.access.redhat.com/ubi8/ubi-minimal:latest \
-         sed -e "s,ko://,,g" -e "s%tinaon/true.*\(\"\)%${registry_prefix}:tektoncd-pipeline-nop\1%" \
+         sed -e "s,ko://,,g" \
              -e "s%gcr.io/distroless/base.*\(\"\)%registry.access.redhat.com/ubi8/ubi-minimal:latest\1%" \
              -e 's%\(.* image:\)\(github.com\)\(.*\/\)\(test\/\)\(.*\)%\1\2 \3\4test-\5%' $yaml \
              -e "s%\(.* image:\)\(github.com\)\(.*\/\)\(.*\)%\1 ""$registry_prefix"'\:tektoncd-pipeline-\4%'  \

@@ -1,5 +1,5 @@
 GOOS=linux
-CORE_IMAGES=./cmd/controller ./cmd/entrypoint ./cmd/kubeconfigwriter ./cmd/webhook ./cmd/imagedigestexporter ./cmd/pullrequest-init
+CORE_IMAGES=./cmd/controller ./cmd/entrypoint ./cmd/kubeconfigwriter ./cmd/webhook ./cmd/imagedigestexporter ./cmd/pullrequest-init ./cmd/nop
 CORE_IMAGES_WITH_GIT=./cmd/creds-init ./cmd/git-init
 ADDN_IMAGES=./vendor/github.com/GoogleCloudPlatform/cloud-builders/gcs-fetcher/cmd/gcs-fetcher
 ALL_IMAGES=$(CORE_IMAGES) $(CORE_IMAGES_WITH_GIT) $(ADDN_IMAGES)
