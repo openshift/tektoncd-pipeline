@@ -2,7 +2,10 @@ GOOS=linux
 CORE_IMAGES=./cmd/controller ./cmd/entrypoint ./cmd/kubeconfigwriter ./cmd/webhook ./cmd/imagedigestexporter ./cmd/pullrequest-init
 CORE_IMAGES_WITH_GIT=./cmd/creds-init ./cmd/git-init
 ADDN_IMAGES=./vendor/github.com/GoogleCloudPlatform/cloud-builders/gcs-fetcher/cmd/gcs-fetcher
-ALL_IMAGES=$(CORE_IMAGES) $(CORE_IMAGES_WITH_GIT) $(ADDN_IMAGES)
+# For the custom ones that are not auto generated
+CORE_IMAGES_CUSTOMED=./cmd/nop
+
+ALL_IMAGES=$(CORE_IMAGES) $(CORE_IMAGES_WITH_GIT) $(ADDN_IMAGES) $(CORE_IMAGES_CUSTOMED)
 
 ##
 # You need to provide a RELEASE_VERSION when using targets like `push-image`, you can do it directly
@@ -62,6 +65,8 @@ generate-dockerfiles:
 	@./openshift/ci-operator/generate-dockerfiles.sh openshift/ci-operator/Dockerfile.in openshift/ci-operator/tekton-images $(CORE_IMAGES)
 	@./openshift/ci-operator/generate-dockerfiles.sh openshift/ci-operator/Dockerfile.in openshift/ci-operator/tekton-images $(ADDN_IMAGES)
 	@./openshift/ci-operator/generate-dockerfiles.sh openshift/ci-operator/Dockerfile-git.in openshift/ci-operator/tekton-images $(CORE_IMAGES_WITH_GIT)
+	@echo "INFO: There is some custom images that are only updated manually in:"; \
+	echo "	$(CORE_IMAGES_CUSTOMED)";
 .PHONY: generate-dockerfiles
 
 # NOTE(chmou): Install uidwraper for launching some binaries with fixed uid
