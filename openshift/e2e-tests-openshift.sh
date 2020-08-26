@@ -265,10 +265,10 @@ run_go_e2e_tests || failed=1
 
 run_yaml_e2e_tests_alpha || failed=1
 
-breakPoint before
+#breakPoint before
 
 run_yaml_e2e_tests_beta || failed=1
-breakPoint after
+#breakPoint after
 
 ((failed)) && dump_cluster_state
 
