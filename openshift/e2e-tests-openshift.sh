@@ -159,10 +159,6 @@ function check_results() {
     if [[ ! "${result,,}" == *"=succeededtrue" ]]; then
       echo "ERROR: test ${result} but should be succeededtrue"
       kubectl get $1.tekton.dev ${reltestname} -o yaml
-      echo "started printing logs"
-      kubectl get pods | grep ${reltestname} > podname.txt
-      for i in `awk '{ print $1 }' podname.txt`; do kubectl logs -f $i --all-containers ; done
-      echo "end printing logs"
       failed=1
     fi
   done
@@ -185,10 +181,18 @@ function output_pods_logs() {
     echo ">>>> $1 ${run}"
     case "$1" in
     "taskrun")
-      go run ./test/logs/main.go -tr ${run}
+      #go run ./test/logs/main.go -tr ${run}
+      echo "started printing logs"
+      kubectl get pods | grep ${run} > podname.txt
+      for i in `awk '{ print $1 }' podname.txt`; do kubectl logs -f $i --all-containers ; done
+      echo "end printing logs"
       ;;
     "pipelinerun")
-      go run ./test/logs/main.go -pr ${run}
+      #go run ./test/logs/main.go -pr ${run}
+      echo "started printing logs"
+      kubectl get pods | grep ${run} > podname.txt
+      for i in `awk '{ print $1 }' podname.txt`; do kubectl logs -f $i --all-containers ; done
+      echo "end printing logs"
       ;;
     esac
   done
