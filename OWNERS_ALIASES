@@ -1,37 +1,17 @@
 aliases:
-  pipeline-approvers:
-  - afrittoli
-  - bobcatfish
-  - dibyom
-  - dlorenc
-  - ImJasonH
-  - sbwsg
+  build-pipeline-approvers:
   - vdemeester
-  - pritidesai
+  - chmouel
+  - sthaha
+  - nikhil-thomas
+  - piyush-garg
+  - khrm
 
-  apis-approvers:
-  - afrittoli
-  - bobcatfish
-  - dibyom
-  - dlorenc
-  - ImJasonH
-  - sbwsg
+  build-pipeline-reviewers:
   - vdemeester
-  - pritidesai
-
-  productivity-approvers:
-  - afrittoli
-  - bobcatfish
-  - vdemeester
-  productivity-reviewers:
-  - dibyom
-  - dlorenc
-  - ImJasonH
-  - sbwsg
-
-# Alumni ❤️
-# tejal29
-# pivotal-nader-ziada
-# shashwathi
-# aaron-prindle
-# abayer
+  - chmouel
+  - sthaha
+  - nikhil-thomas
+  - piyush-garg
+  - pradeepitm12
+  - khrm
