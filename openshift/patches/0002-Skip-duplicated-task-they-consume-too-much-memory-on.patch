@@ -1,0 +1,37 @@
+From 24dc680862dd44e0a3f70ed192b102fc452f9301 Mon Sep 17 00:00:00 2001
+From: Khurram Baig <kbaig@redhat.com>
+Date: Tue, 17 Nov 2020 18:41:37 +0530
+Subject: [PATCH] Skip duplicated task, they consume too much memory on
+ openshift
+
+---
+ test/duplicate_test.go          | 1 +
+ test/v1alpha1/duplicate_test.go | 1 +
+ 2 files changed, 2 insertions(+)
+
+diff --git a/test/duplicate_test.go b/test/duplicate_test.go
+index 350a061d..4f228db2 100644
+--- a/test/duplicate_test.go
++++ b/test/duplicate_test.go
+@@ -34,6 +34,7 @@ import (
+ 
+ // TestDuplicatePodTaskRun creates 10 builds and checks that each of them has only one build pod.
+ func TestDuplicatePodTaskRun(t *testing.T) {
++	t.Skip("Too much memory used on OpenShift")
+ 	t.Parallel()
+ 
+ 	ctx, cancel := context.WithCancel(context.Background())
+diff --git a/test/v1alpha1/duplicate_test.go b/test/v1alpha1/duplicate_test.go
+index fe1ab6bb..7c09f3e3 100644
+--- a/test/v1alpha1/duplicate_test.go
++++ b/test/v1alpha1/duplicate_test.go
+@@ -33,6 +33,7 @@ import (
+ 
+ // TestDuplicatePodTaskRun creates 10 builds and checks that each of them has only one build pod.
+ func TestDuplicatePodTaskRun(t *testing.T) {
++	t.Skip("Too much memory used on OpenShift")
+ 	t.Parallel()
+ 	ctx, cancel := context.WithCancel(context.Background())
+ 	defer cancel()
+-- 
+2.28.0
