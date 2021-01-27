@@ -1,0 +1,17 @@
+aliases:
+  build-pipeline-approvers:
+  - vdemeester
+  - chmouel
+  - sthaha
+  - nikhil-thomas
+  - piyush-garg
+  - khrm
+
+  build-pipeline-reviewers:
+  - vdemeester
+  - chmouel
+  - sthaha
+  - nikhil-thomas
+  - piyush-garg
+  - pradeepitm12
+  - khrm
