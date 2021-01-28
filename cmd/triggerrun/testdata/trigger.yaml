@@ -1,9 +1,0 @@
-apiVersion: triggers.tekton.dev/v1alpha1
-kind: Trigger
-metadata:
-  name: trigger-run
-spec:
-  bindings:
-    - ref: git-event-binding
-  template:
-    ref: simple-pipeline-template
