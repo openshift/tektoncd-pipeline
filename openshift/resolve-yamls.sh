@@ -75,14 +75,6 @@ function resolve_resources() {
     echo >>$resolved_file_name
   done
 
-  # handle additional images which are not build from ./cmd (images not in $CORE_IMAGES)
-  if [[ -n ${image_tag} ]];then
-      sed -i -r -e "s,github.com/tektoncd/pipeline/vendor/github.com/GoogleCloudPlatform/cloud-builders/gcs-fetcher/cmd/gcs-fetcher,${registry_prefix}-gcs-fetcher:${image_tag},g" $resolved_file_name
-   else
-      sed -i -r -e "s,github.com/tektoncd/pipeline/vendor/github.com/GoogleCloudPlatform/cloud-builders/gcs-fetcher/cmd/gcs-fetcher,${registry_prefix}:tektoncd-pipeline-gcs-fetcher,g" $resolved_file_name
-  fi
-}
-
 function generate_pipeline_resources() {
     local output_file=$1
     local image_prefix=$2
