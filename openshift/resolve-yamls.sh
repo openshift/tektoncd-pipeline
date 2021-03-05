@@ -74,6 +74,7 @@ function resolve_resources() {
 
     echo >>$resolved_file_name
   done
+}
 
 function generate_pipeline_resources() {
     local output_file=$1
