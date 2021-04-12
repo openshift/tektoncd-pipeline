@@ -234,7 +234,7 @@ func TestPipelineRun_Validate(t *testing.T) {
 							Steps: []v1beta1.Step{{
 								Container: corev1.Container{
 									Name:    "echo",
-									Image:   "ubuntu",
+									Image:   "public.ecr.aws/ubuntu/ubuntu:latest",
 									Command: []string{"echo"},
 									Args:    []string{"$(params.task-words[*])"},
 								},

@@ -46,7 +46,7 @@ import (
 var (
 	images = pipeline.Images{
 		EntrypointImage: "entrypoint-image",
-		ShellImage:      "busybox",
+		ShellImage:      "mirror.gcr.io/library/busybox",
 	}
 
 	ignoreReleaseAnnotation = func(k string, v string) bool {
@@ -519,7 +519,7 @@ func TestPodBuild(t *testing.T) {
 			InitContainers: []corev1.Container{
 				{
 					Name:         "place-scripts",
-					Image:        "busybox",
+					Image:        "mirror.gcr.io/library/busybox",
 					Command:      []string{"sh"},
 					VolumeMounts: []corev1.VolumeMount{scriptsVolumeMount},
 					Args: []string{"-c", `tmpfile="/tekton/scripts/sidecar-script-0-9l9zj"
