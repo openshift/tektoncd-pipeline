@@ -39,7 +39,7 @@ find . -type f -name '*.go' -o -name '*.yaml' | \
           -e 's,image: ubuntu$,image: public.ecr.aws/ubuntu/ubuntu:latest,' -e 's,"ubuntu","public.ecr.aws/ubuntu/ubuntu",g' \
           -e 's,"busybox","mirror.gcr.io/library/busybox",g' -e 's,image: busybox$,image: mirror.gcr.io/library/busybox,'
 
-git commit -m ":robot: Switching image from docker.io to public cloud providers registry"
+git commit -a -m ":robot: Switching image from docker.io to public cloud providers registry"
 
 git push -f ${OPENSHIFT_REMOTE} release-next
 
