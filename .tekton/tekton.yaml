@@ -1,0 +1,9 @@
+owners:
+  - "@openshift-pipelines"
+  - chmouel
+  
+tasks:
+  - git-clone
+
+files:
+  - run.yaml
