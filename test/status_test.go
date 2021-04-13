@@ -46,7 +46,7 @@ func TestTaskRunPipelineRunStatus(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: "banana", Namespace: namespace},
 		Spec: v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"ls", "-la"},
 			}}},
 		},

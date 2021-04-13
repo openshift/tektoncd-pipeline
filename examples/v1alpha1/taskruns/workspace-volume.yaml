@@ -6,14 +6,14 @@ spec:
   taskSpec:
     steps:
     - name: write
-      image: ubuntu
+      image: public.ecr.aws/ubuntu/ubuntu:latest
       script: echo some stuff > /workspace/stuff
     - name: read
-      image: ubuntu
+      image: public.ecr.aws/ubuntu/ubuntu:latest
       script: cat /workspace/stuff
 
     - name: override-workspace
-      image: ubuntu
+      image: public.ecr.aws/ubuntu/ubuntu:latest
       # /workspace/stuff *doesn't* exist.
       script: |
         #!/usr/bin/env bash

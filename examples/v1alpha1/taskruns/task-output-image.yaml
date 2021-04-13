@@ -55,7 +55,7 @@ spec:
       targetPath: /workspace/sourcerepo
   steps:
   - name: build-and-push
-    image: busybox
+    image: mirror.gcr.io/library/busybox
     script: |
       set -e
       cat <<EOF > $(inputs.resources.sourcerepo.path)/index.json
@@ -70,7 +70,7 @@ spec:
         ]
       }
   - name: echo
-    image: busybox
+    image: mirror.gcr.io/library/busybox
     script: cat $(inputs.resources.sourcerepo.path)/index.json
 ---
 apiVersion: tekton.dev/v1alpha1

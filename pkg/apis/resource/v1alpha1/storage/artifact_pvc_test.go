@@ -33,11 +33,11 @@ func TestPVCGetCopyFromContainerSpec(t *testing.T) {
 
 	pvc := storage.ArtifactPVC{
 		Name:       "pipelinerun-pvc",
-		ShellImage: "busybox",
+		ShellImage: "mirror.gcr.io/library/busybox",
 	}
 	want := []v1beta1.Step{{Container: corev1.Container{
 		Name:  "source-copy-workspace-9l9zj",
-		Image: "busybox",
+		Image: "mirror.gcr.io/library/busybox",
 
 		Command: []string{"cp", "-r", "src-path/.", "/workspace/destination"},
 		Env:     []corev1.EnvVar{{Name: "TEKTON_RESOURCE_NAME", Value: "workspace"}},
@@ -54,16 +54,16 @@ func TestPVCGetCopyToContainerSpec(t *testing.T) {
 
 	pvc := storage.ArtifactPVC{
 		Name:       "pipelinerun-pvc",
-		ShellImage: "busybox",
+		ShellImage: "mirror.gcr.io/library/busybox",
 	}
 	want := []v1beta1.Step{{Container: corev1.Container{
 		Name:         "source-mkdir-workspace-9l9zj",
-		Image:        "busybox",
+		Image:        "mirror.gcr.io/library/busybox",
 		Command:      []string{"mkdir", "-p", "/workspace/destination"},
 		VolumeMounts: []corev1.VolumeMount{{MountPath: "/pvc", Name: "pipelinerun-pvc"}},
 	}}, {Container: corev1.Container{
 		Name:         "source-copy-workspace-mz4c7",
-		Image:        "busybox",
+		Image:        "mirror.gcr.io/library/busybox",
 		Command:      []string{"cp", "-r", "src-path/.", "/workspace/destination"},
 		VolumeMounts: []corev1.VolumeMount{{MountPath: "/pvc", Name: "pipelinerun-pvc"}},
 		Env:          []corev1.EnvVar{{Name: "TEKTON_RESOURCE_NAME", Value: "workspace"}},
@@ -95,10 +95,10 @@ func TestPVCGetMakeStep(t *testing.T) {
 
 	want := v1beta1.Step{Container: corev1.Container{
 		Name:    "create-dir-workspace-9l9zj",
-		Image:   "busybox",
+		Image:   "mirror.gcr.io/library/busybox",
 		Command: []string{"mkdir", "-p", "/workspace/destination"},
 	}}
-	got := storage.CreateDirStep("busybox", "workspace", "/workspace/destination")
+	got := storage.CreateDirStep("mirror.gcr.io/library/busybox", "workspace", "/workspace/destination")
 	if d := cmp.Diff(got, want); d != "" {
 		t.Errorf("Diff:\n%s", diff.PrintWantGot(d))
 	}

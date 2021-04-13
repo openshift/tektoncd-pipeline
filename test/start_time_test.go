@@ -48,19 +48,19 @@ func TestStartTime(t *testing.T) {
 		Spec: v1beta1.TaskRunSpec{
 			TaskSpec: &v1beta1.TaskSpec{
 				Steps: []v1beta1.Step{{
-					Container: corev1.Container{Image: "ubuntu"},
+					Container: corev1.Container{Image: "public.ecr.aws/ubuntu/ubuntu"},
 					Script:    "sleep 10",
 				}, {
-					Container: corev1.Container{Image: "ubuntu"},
+					Container: corev1.Container{Image: "public.ecr.aws/ubuntu/ubuntu"},
 					Script:    "sleep 10",
 				}, {
-					Container: corev1.Container{Image: "ubuntu"},
+					Container: corev1.Container{Image: "public.ecr.aws/ubuntu/ubuntu"},
 					Script:    "sleep 10",
 				}, {
-					Container: corev1.Container{Image: "ubuntu"},
+					Container: corev1.Container{Image: "public.ecr.aws/ubuntu/ubuntu"},
 					Script:    "sleep 10",
 				}, {
-					Container: corev1.Container{Image: "ubuntu"},
+					Container: corev1.Container{Image: "public.ecr.aws/ubuntu/ubuntu"},
 					Script:    "sleep 10",
 				}},
 			},
