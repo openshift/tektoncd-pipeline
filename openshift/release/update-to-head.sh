@@ -28,6 +28,19 @@ if [[ -d openshift/patches ]];then
     done
 fi
 
+# Caution: Need to be applied after the patches
+#
+# Replace docker.io images with a mirror which doesn't get rate limited.
+# prefer to use ecr since closest to our install but sometime gcr.io is better,
+# for example on busybox the ecr image (public.ecr.aws/runecast/busybox)
+# doesn't have latest tags while the gcr one does.
+find . -type f -name '*.go' -o -name '*.yaml' | \
+    xargs -P6 -L1 -r sed -E -i \
+          -e 's,image: ubuntu$,image: public.ecr.aws/ubuntu/ubuntu:latest,' -e 's,"ubuntu","public.ecr.aws/ubuntu/ubuntu",g' \
+          -e 's,"busybox","mirror.gcr.io/library/busybox",g' -e 's,image: busybox$,image: mirror.gcr.io/library/busybox,'
+
+git commit -m ":robot: Switching image from docker.io to public cloud providers registry"
+
 git push -f ${OPENSHIFT_REMOTE} release-next
 
 # Trigger CI
