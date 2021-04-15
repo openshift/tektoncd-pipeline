@@ -93,7 +93,7 @@ spec:
             print("Not yet...")
             time.sleep(10)
     - name: build-index-json
-      image: busybox
+      image: mirror.gcr.io/library/busybox
       script: |
         set -e
         cat <<EOF > $(outputs.resources.myimage.path)/index.json
