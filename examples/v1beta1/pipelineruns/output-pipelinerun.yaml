@@ -26,11 +26,11 @@ spec:
       type: git
   steps:
   - name: read-docs-old
-    image: ubuntu
+    image: public.ecr.aws/ubuntu/ubuntu:latest
     command: ["/bin/bash"]
     args: ['-c', 'ls -la /workspace/damnworkspace/docs/README.md']  # tests that targetpath works
   - name: write-new-stuff
-    image: ubuntu
+    image: public.ecr.aws/ubuntu/ubuntu:latest
     command: ['bash']
     args: ['-c', 'ln -s /workspace/damnworkspace /workspace/output/workspace && echo some stuff > /workspace/output/workspace/stuff']
 ---
@@ -50,7 +50,7 @@ spec:
       targetPath: newworkspace
   steps:
   - name: read
-    image: ubuntu
+    image: public.ecr.aws/ubuntu/ubuntu:latest
     command: ["/bin/bash"]
     args: ['$(inputs.params.args[*])']  # tests that new targetpath and previous task output is dumped
 ---

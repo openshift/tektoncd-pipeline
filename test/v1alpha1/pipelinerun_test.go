@@ -126,7 +126,7 @@ func TestPipelineRun(t *testing.T) {
 			}
 
 			task := tb.Task(getName(taskName, index), tb.TaskSpec(
-				tb.Step("ubuntu",
+				tb.Step("public.ecr.aws/ubuntu/ubuntu",
 					tb.StepCommand("/bin/bash"),
 					tb.StepArgs("-c", "echo hello, world"),
 				),
@@ -259,30 +259,30 @@ func getFanInFanOutTasks() []*v1alpha1.Task {
 				tb.ResourceTargetPath("brandnewspace"),
 			)),
 			tb.TaskOutputs(outWorkspaceResource),
-			tb.Step("ubuntu", tb.StepName("write-data-task-0-step-0"), tb.StepCommand("/bin/bash"),
+			tb.Step("public.ecr.aws/ubuntu/ubuntu", tb.StepName("write-data-task-0-step-0"), tb.StepCommand("/bin/bash"),
 				tb.StepArgs("-c", "echo stuff > $(outputs.resources.workspace.path)/stuff"),
 			),
-			tb.Step("ubuntu", tb.StepName("write-data-task-0-step-1"), tb.StepCommand("/bin/bash"),
+			tb.Step("public.ecr.aws/ubuntu/ubuntu", tb.StepName("write-data-task-0-step-1"), tb.StepCommand("/bin/bash"),
 				tb.StepArgs("-c", "echo other > $(outputs.resources.workspace.path)/other"),
 			),
 		)),
 		tb.Task("check-create-files-exists", tb.TaskSpec(
 			tb.TaskInputs(inWorkspaceResource),
 			tb.TaskOutputs(outWorkspaceResource),
-			tb.Step("ubuntu", tb.StepName("read-from-task-0"), tb.StepCommand("/bin/bash"),
+			tb.Step("public.ecr.aws/ubuntu/ubuntu", tb.StepName("read-from-task-0"), tb.StepCommand("/bin/bash"),
 				tb.StepArgs("-c", "[[ stuff == $(cat $(inputs.resources.workspace.path)/stuff) ]]"),
 			),
-			tb.Step("ubuntu", tb.StepName("write-data-task-1"), tb.StepCommand("/bin/bash"),
+			tb.Step("public.ecr.aws/ubuntu/ubuntu", tb.StepName("write-data-task-1"), tb.StepCommand("/bin/bash"),
 				tb.StepArgs("-c", "echo something > $(outputs.resources.workspace.path)/something"),
 			),
 		)),
 		tb.Task("check-create-files-exists-2", tb.TaskSpec(
 			tb.TaskInputs(inWorkspaceResource),
 			tb.TaskOutputs(outWorkspaceResource),
-			tb.Step("ubuntu", tb.StepName("read-from-task-0"), tb.StepCommand("/bin/bash"),
+			tb.Step("public.ecr.aws/ubuntu/ubuntu", tb.StepName("read-from-task-0"), tb.StepCommand("/bin/bash"),
 				tb.StepArgs("-c", "[[ other == $(cat $(inputs.resources.workspace.path)/other) ]]"),
 			),
-			tb.Step("ubuntu", tb.StepName("write-data-task-1"), tb.StepCommand("/bin/bash"),
+			tb.Step("public.ecr.aws/ubuntu/ubuntu", tb.StepName("write-data-task-1"), tb.StepCommand("/bin/bash"),
 				tb.StepArgs("-c", "echo else > $(outputs.resources.workspace.path)/else"),
 			),
 		)),
@@ -290,10 +290,10 @@ func getFanInFanOutTasks() []*v1alpha1.Task {
 			tb.TaskInputs(tb.InputsResource("workspace", v1alpha1.PipelineResourceTypeGit,
 				tb.ResourceTargetPath("readingspace"),
 			)),
-			tb.Step("ubuntu", tb.StepName("read-from-task-0"), tb.StepCommand("/bin/bash"),
+			tb.Step("public.ecr.aws/ubuntu/ubuntu", tb.StepName("read-from-task-0"), tb.StepCommand("/bin/bash"),
 				tb.StepArgs("-c", "[[ something == $(cat $(inputs.resources.workspace.path)/something) ]]"),
 			),
-			tb.Step("ubuntu", tb.StepName("read-from-task-1"), tb.StepCommand("/bin/bash"),
+			tb.Step("public.ecr.aws/ubuntu/ubuntu", tb.StepName("read-from-task-1"), tb.StepCommand("/bin/bash"),
 				tb.StepArgs("-c", "[[ else == $(cat $(inputs.resources.workspace.path)/else) ]]"),
 			),
 		)),
@@ -556,7 +556,7 @@ func getPipelineWithFailingCondition(suffix int) *v1alpha1.Pipeline {
 }
 
 func getFailingCondition(namespace string) *v1alpha1.Condition {
-	return tb.Condition(cond1Name, tb.ConditionNamespace(namespace), tb.ConditionSpec(tb.ConditionSpecCheck("", "ubuntu",
+	return tb.Condition(cond1Name, tb.ConditionNamespace(namespace), tb.ConditionSpec(tb.ConditionSpecCheck("", "public.ecr.aws/ubuntu/ubuntu",
 		tb.Command("/bin/bash"), tb.Args("exit 1"))))
 }
 

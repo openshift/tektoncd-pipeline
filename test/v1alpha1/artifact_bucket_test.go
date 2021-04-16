@@ -137,10 +137,10 @@ func TestStorageBucketPipelineRun(t *testing.T) {
 	addFileTask := tb.Task(addFileTaskName, tb.TaskSpec(
 		tb.TaskInputs(tb.InputsResource(helloworldResourceName, v1alpha1.PipelineResourceTypeGit)),
 		tb.TaskOutputs(tb.OutputsResource(helloworldResourceName, v1alpha1.PipelineResourceTypeGit)),
-		tb.Step("ubuntu", tb.StepName("addfile"), tb.StepCommand("/bin/bash"),
+		tb.Step("public.ecr.aws/ubuntu/ubuntu", tb.StepName("addfile"), tb.StepCommand("/bin/bash"),
 			tb.StepArgs("-c", "'#!/bin/bash\necho hello' > /workspace/helloworldgit/newfile"),
 		),
-		tb.Step("ubuntu", tb.StepName("make-executable"), tb.StepCommand("chmod"),
+		tb.Step("public.ecr.aws/ubuntu/ubuntu", tb.StepName("make-executable"), tb.StepCommand("chmod"),
 			tb.StepArgs("+x", "/workspace/helloworldgit/newfile")),
 	))
 	if _, err := c.TaskClient.Create(ctx, addFileTask, metav1.CreateOptions{}); err != nil {
@@ -150,7 +150,7 @@ func TestStorageBucketPipelineRun(t *testing.T) {
 	t.Logf("Creating Task %s", runFileTaskName)
 	readFileTask := tb.Task(runFileTaskName, tb.TaskSpec(
 		tb.TaskInputs(tb.InputsResource(helloworldResourceName, v1alpha1.PipelineResourceTypeGit)),
-		tb.Step("ubuntu", tb.StepName("runfile"), tb.StepCommand("/workspace/helloworld/newfile")),
+		tb.Step("public.ecr.aws/ubuntu/ubuntu", tb.StepName("runfile"), tb.StepCommand("/workspace/helloworld/newfile")),
 	))
 	if _, err := c.TaskClient.Create(ctx, readFileTask, metav1.CreateOptions{}); err != nil {
 		t.Fatalf("Failed to create Task `%s`: %s", runFileTaskName, err)

@@ -48,7 +48,7 @@ func TestPipelineRunTimeout(t *testing.T) {
 
 	t.Logf("Creating Task in namespace %s", namespace)
 	task := tb.Task(helpers.ObjectNameForTest(t), tb.TaskSpec(
-		tb.Step("busybox", tb.StepCommand("/bin/sh"), tb.StepArgs("-c", "sleep 10"))))
+		tb.Step("mirror.gcr.io/library/busybox", tb.StepCommand("/bin/sh"), tb.StepArgs("-c", "sleep 10"))))
 	if _, err := c.TaskClient.Create(ctx, task, metav1.CreateOptions{}); err != nil {
 		t.Fatalf("Failed to create Task %q: %s", task.Name, err)
 	}
@@ -150,7 +150,7 @@ func TestTaskRunTimeout(t *testing.T) {
 
 	t.Logf("Creating Task and TaskRun in namespace %s", namespace)
 	task := tb.Task(helpers.ObjectNameForTest(t),
-		tb.TaskSpec(tb.Step("busybox", tb.StepCommand("/bin/sh"), tb.StepArgs("-c", "sleep 3000"))))
+		tb.TaskSpec(tb.Step("mirror.gcr.io/library/busybox", tb.StepCommand("/bin/sh"), tb.StepArgs("-c", "sleep 3000"))))
 	if _, err := c.TaskClient.Create(ctx, task, metav1.CreateOptions{}); err != nil {
 		t.Fatalf("Failed to create Task `%s`: %s", task.Name, err)
 	}
@@ -180,10 +180,10 @@ func TestPipelineTaskTimeout(t *testing.T) {
 
 	t.Logf("Creating Tasks in namespace %s", namespace)
 	task1 := tb.Task(helpers.ObjectNameForTest(t), tb.TaskSpec(
-		tb.Step("busybox", tb.StepCommand("sleep"), tb.StepArgs("1s"))))
+		tb.Step("mirror.gcr.io/library/busybox", tb.StepCommand("sleep"), tb.StepArgs("1s"))))
 
 	task2 := tb.Task(helpers.ObjectNameForTest(t), tb.TaskSpec(
-		tb.Step("busybox", tb.StepCommand("sleep"), tb.StepArgs("10s"))))
+		tb.Step("mirror.gcr.io/library/busybox", tb.StepCommand("sleep"), tb.StepArgs("10s"))))
 
 	if _, err := c.TaskClient.Create(ctx, task1, metav1.CreateOptions{}); err != nil {
 		t.Fatalf("Failed to create Task `%s`: %s", task1.Name, err)
