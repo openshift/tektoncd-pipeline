@@ -73,12 +73,12 @@ func TestSidecarTaskSupport(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: sidecarTaskName},
 				Spec: v1alpha1.TaskSpec{TaskSpec: v1beta1.TaskSpec{
 					Steps: []v1beta1.Step{{Container: corev1.Container{
-						Image:   "busybox",
+						Image:   "mirror.gcr.io/library/busybox",
 						Name:    primaryContainerName,
 						Command: test.stepCommand,
 					}}},
 					Sidecars: []v1beta1.Sidecar{{Container: corev1.Container{
-						Image:   "busybox",
+						Image:   "mirror.gcr.io/library/busybox",
 						Name:    sidecarContainerName,
 						Command: test.sidecarCommand,
 					}}},

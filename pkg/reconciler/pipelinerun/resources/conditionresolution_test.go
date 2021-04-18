@@ -196,35 +196,35 @@ func TestResolvedConditionCheck_ConditionToTaskSpec(t *testing.T) {
 	}{{
 		name: "user-provided-container-name",
 		cond: tbv1alpha1.Condition("name", tbv1alpha1.ConditionSpec(
-			tbv1alpha1.ConditionSpecCheck("foo", "ubuntu"),
+			tbv1alpha1.ConditionSpecCheck("foo", "public.ecr.aws/ubuntu/ubuntu"),
 		)),
 		want: v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
 				Name:  "foo",
-				Image: "ubuntu",
+				Image: "public.ecr.aws/ubuntu/ubuntu",
 			}}},
 		},
 	}, {
 		name: "default-container-name",
 		cond: tbv1alpha1.Condition("bar", tbv1alpha1.ConditionSpec(
-			tbv1alpha1.ConditionSpecCheck("", "ubuntu"),
+			tbv1alpha1.ConditionSpecCheck("", "public.ecr.aws/ubuntu/ubuntu"),
 		)),
 		want: v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
 				Name:  "condition-check-bar",
-				Image: "ubuntu",
+				Image: "public.ecr.aws/ubuntu/ubuntu",
 			}}},
 		},
 	}, {
 		name: "default-container-name",
 		cond: tbv1alpha1.Condition("very-very-very-very-very-very-very-very-very-very-very-long-name", tbv1alpha1.ConditionSpec(
-			tbv1alpha1.ConditionSpecCheck("", "ubuntu"),
+			tbv1alpha1.ConditionSpecCheck("", "public.ecr.aws/ubuntu/ubuntu"),
 		)),
 		want: v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
 				// Shortened via: names.SimpleNameGenerator.RestrictLength
 				Name:  "condition-check-very-very-very-very-very-very-very-very-very-ve",
-				Image: "ubuntu",
+				Image: "public.ecr.aws/ubuntu/ubuntu",
 			}}},
 		},
 	}, {
@@ -252,7 +252,7 @@ func TestResolvedConditionCheck_ConditionToTaskSpec(t *testing.T) {
 	}, {
 		name: "with-resources",
 		cond: tbv1alpha1.Condition("bar", tbv1alpha1.ConditionSpec(
-			tbv1alpha1.ConditionSpecCheck("name", "ubuntu",
+			tbv1alpha1.ConditionSpecCheck("name", "public.ecr.aws/ubuntu/ubuntu",
 				tb.Args("$(resources.git-resource.revision)")),
 			tbv1alpha1.ConditionResource("git-resource", resourcev1alpha1.PipelineResourceTypeGit),
 		)),
@@ -265,7 +265,7 @@ func TestResolvedConditionCheck_ConditionToTaskSpec(t *testing.T) {
 		want: v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
 				Name:  "name",
-				Image: "ubuntu",
+				Image: "public.ecr.aws/ubuntu/ubuntu",
 				Args:  []string{"master"},
 			}}},
 			Resources: &v1beta1.TaskResources{

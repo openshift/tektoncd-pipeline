@@ -220,11 +220,11 @@ func TestValidOutputResources(t *testing.T) {
 		},
 		wantSteps: []v1beta1.Step{{Container: corev1.Container{
 			Name:    "create-dir-source-workspace-9l9zj",
-			Image:   "busybox",
+			Image:   "mirror.gcr.io/library/busybox",
 			Command: []string{"mkdir", "-p", "/workspace/output/source-workspace"},
 		}}, {Container: corev1.Container{
 			Name:    "source-mkdir-source-git-mz4c7",
-			Image:   "busybox",
+			Image:   "mirror.gcr.io/library/busybox",
 			Command: []string{"mkdir", "-p", "pipeline-task-name"},
 			VolumeMounts: []corev1.VolumeMount{{
 				Name:      "pipelinerun-pvc",
@@ -232,7 +232,7 @@ func TestValidOutputResources(t *testing.T) {
 			}},
 		}}, {Container: corev1.Container{
 			Name:    "source-copy-source-git-mssqb",
-			Image:   "busybox",
+			Image:   "mirror.gcr.io/library/busybox",
 			Command: []string{"cp", "-r", "/workspace/output/source-workspace/.", "pipeline-task-name"},
 			VolumeMounts: []corev1.VolumeMount{{
 				Name:      "pipelinerun-pvc",
@@ -294,11 +294,11 @@ func TestValidOutputResources(t *testing.T) {
 		},
 		wantSteps: []v1beta1.Step{{Container: corev1.Container{
 			Name:    "create-dir-source-workspace-9l9zj",
-			Image:   "busybox",
+			Image:   "mirror.gcr.io/library/busybox",
 			Command: []string{"mkdir", "-p", "/workspace/output/source-workspace"},
 		}}, {Container: corev1.Container{
 			Name:    "source-mkdir-source-git-mz4c7",
-			Image:   "busybox",
+			Image:   "mirror.gcr.io/library/busybox",
 			Command: []string{"mkdir", "-p", "pipeline-task-name"},
 			VolumeMounts: []corev1.VolumeMount{{
 				Name:      "pipelinerun-pvc",
@@ -306,7 +306,7 @@ func TestValidOutputResources(t *testing.T) {
 			}},
 		}}, {Container: corev1.Container{
 			Name:    "source-copy-source-git-mssqb",
-			Image:   "busybox",
+			Image:   "mirror.gcr.io/library/busybox",
 			Command: []string{"cp", "-r", "/workspace/output/source-workspace/.", "pipeline-task-name"},
 			VolumeMounts: []corev1.VolumeMount{{
 				Name:      "pipelinerun-pvc",
@@ -368,7 +368,7 @@ func TestValidOutputResources(t *testing.T) {
 		},
 		wantSteps: []v1beta1.Step{{Container: corev1.Container{
 			Name:    "create-dir-source-workspace-9l9zj",
-			Image:   "busybox",
+			Image:   "mirror.gcr.io/library/busybox",
 			Command: []string{"mkdir", "-p", "/workspace/output/source-workspace"},
 		}}},
 		wantVolumes: nil,
@@ -410,7 +410,7 @@ func TestValidOutputResources(t *testing.T) {
 		},
 		wantSteps: []v1beta1.Step{{Container: corev1.Container{
 			Name:    "create-dir-source-workspace-9l9zj",
-			Image:   "busybox",
+			Image:   "mirror.gcr.io/library/busybox",
 			Command: []string{"mkdir", "-p", "/workspace/output/source-workspace"},
 		}}},
 	}, {
@@ -471,18 +471,18 @@ func TestValidOutputResources(t *testing.T) {
 		wantSteps: []v1beta1.Step{
 			{Container: corev1.Container{
 				Name:    "create-dir-source-workspace-9l9zj",
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"mkdir", "-p", "/workspace/output/source-workspace"},
 			}},
 			{Container: corev1.Container{
 				Name:         "source-mkdir-source-gcs-mz4c7",
-				Image:        "busybox",
+				Image:        "mirror.gcr.io/library/busybox",
 				Command:      []string{"mkdir", "-p", "pipeline-task-path"},
 				VolumeMounts: []corev1.VolumeMount{{Name: "pipelinerun-parent-pvc", MountPath: "/pvc"}},
 			}},
 			{Container: corev1.Container{
 				Name:         "source-copy-source-gcs-mssqb",
-				Image:        "busybox",
+				Image:        "mirror.gcr.io/library/busybox",
 				Command:      []string{"cp", "-r", "/workspace/output/source-workspace/.", "pipeline-task-path"},
 				VolumeMounts: []corev1.VolumeMount{{Name: "pipelinerun-parent-pvc", MountPath: "/pvc"}},
 				Env:          []corev1.EnvVar{{Name: "TEKTON_RESOURCE_NAME", Value: "source-gcs"}},
@@ -562,18 +562,18 @@ func TestValidOutputResources(t *testing.T) {
 		wantSteps: []v1beta1.Step{
 			{Container: corev1.Container{
 				Name:    "create-dir-source-workspace-9l9zj",
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"mkdir", "-p", "/workspace/output/source-workspace"},
 			}},
 			{Container: corev1.Container{
 				Name:         "source-mkdir-source-gcs-mz4c7",
-				Image:        "busybox",
+				Image:        "mirror.gcr.io/library/busybox",
 				Command:      []string{"mkdir", "-p", "pipeline-task-path"},
 				VolumeMounts: []corev1.VolumeMount{{Name: "pipelinerun-pvc", MountPath: "/pvc"}},
 			}},
 			{Container: corev1.Container{
 				Name:         "source-copy-source-gcs-mssqb",
-				Image:        "busybox",
+				Image:        "mirror.gcr.io/library/busybox",
 				Command:      []string{"cp", "-r", "/workspace/output/source-workspace/.", "pipeline-task-path"},
 				VolumeMounts: []corev1.VolumeMount{{Name: "pipelinerun-pvc", MountPath: "/pvc"}},
 				Env:          []corev1.EnvVar{{Name: "TEKTON_RESOURCE_NAME", Value: "source-gcs"}},
@@ -646,7 +646,7 @@ func TestValidOutputResources(t *testing.T) {
 		wantSteps: []v1beta1.Step{
 			{Container: corev1.Container{
 				Name:    "create-dir-source-workspace-9l9zj",
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"mkdir", "-p", "/workspace/output/source-workspace"},
 			}},
 			{Container: corev1.Container{
@@ -707,7 +707,7 @@ func TestValidOutputResources(t *testing.T) {
 		wantSteps: []v1beta1.Step{
 			{Container: corev1.Container{
 				Name:    "create-dir-source-workspace-9l9zj",
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"mkdir", "-p", "/workspace/output/source-workspace"},
 			}},
 			{Container: corev1.Container{
@@ -771,7 +771,7 @@ func TestValidOutputResources(t *testing.T) {
 		},
 		wantSteps: []v1beta1.Step{{Container: corev1.Container{
 			Name:    "create-dir-source-workspace-9l9zj",
-			Image:   "busybox",
+			Image:   "mirror.gcr.io/library/busybox",
 			Command: []string{"mkdir", "-p", "/workspace/output/source-workspace"},
 		}}},
 	}, {
@@ -817,7 +817,7 @@ func TestValidOutputResources(t *testing.T) {
 		},
 		wantSteps: []v1beta1.Step{{Container: corev1.Container{
 			Name:    "create-dir-source-workspace-9l9zj",
-			Image:   "busybox",
+			Image:   "mirror.gcr.io/library/busybox",
 			Command: []string{"mkdir", "-p", "/workspace"},
 		}}},
 	}, {
@@ -857,7 +857,7 @@ func TestValidOutputResources(t *testing.T) {
 		},
 		wantSteps: []v1beta1.Step{{Container: corev1.Container{
 			Name:    "create-dir-source-workspace-9l9zj",
-			Image:   "busybox",
+			Image:   "mirror.gcr.io/library/busybox",
 			Command: []string{"mkdir", "-p", "/workspace/output/source-workspace"},
 		}}},
 	}, {
@@ -908,11 +908,11 @@ func TestValidOutputResources(t *testing.T) {
 		},
 		wantSteps: []v1beta1.Step{{Container: corev1.Container{
 			Name:    "create-dir-source-workspace-1-mz4c7",
-			Image:   "busybox",
+			Image:   "mirror.gcr.io/library/busybox",
 			Command: []string{"mkdir", "-p", "/workspace/output/source-workspace-1"},
 		}}, {Container: corev1.Container{
 			Name:    "create-dir-source-workspace-9l9zj",
-			Image:   "busybox",
+			Image:   "mirror.gcr.io/library/busybox",
 			Command: []string{"mkdir", "-p", "/workspace/output/source-workspace"},
 		}}},
 	}} {
@@ -1000,7 +1000,7 @@ func TestValidOutputResourcesWithBucketStorage(t *testing.T) {
 		},
 		wantSteps: []v1beta1.Step{{Container: corev1.Container{
 			Name:    "create-dir-source-workspace-9l9zj",
-			Image:   "busybox",
+			Image:   "mirror.gcr.io/library/busybox",
 			Command: []string{"mkdir", "-p", "/workspace/output/source-workspace"},
 		}}, {Container: corev1.Container{
 			Name:    "artifact-copy-to-source-git-mz4c7",
@@ -1051,7 +1051,7 @@ func TestValidOutputResourcesWithBucketStorage(t *testing.T) {
 		},
 		wantSteps: []v1beta1.Step{{Container: corev1.Container{
 			Name:    "create-dir-source-workspace-9l9zj",
-			Image:   "busybox",
+			Image:   "mirror.gcr.io/library/busybox",
 			Command: []string{"mkdir", "-p", "/workspace/output/source-workspace"},
 		}}, {Container: corev1.Container{
 			Name:    "artifact-copy-to-source-git-mz4c7",
@@ -1097,7 +1097,7 @@ func TestValidOutputResourcesWithBucketStorage(t *testing.T) {
 		},
 		wantSteps: []v1beta1.Step{{Container: corev1.Container{
 			Name:    "create-dir-source-workspace-9l9zj",
-			Image:   "busybox",
+			Image:   "mirror.gcr.io/library/busybox",
 			Command: []string{"mkdir", "-p", "/workspace/output/source-workspace"},
 		}}},
 	}} {
@@ -1441,12 +1441,12 @@ func TestInputOutputBucketResources(t *testing.T) {
 		wantSteps: []v1beta1.Step{
 			{Container: corev1.Container{
 				Name:    "create-dir-source-workspace-mssqb",
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"mkdir", "-p", "/workspace/output/source-workspace"},
 			}},
 			{Container: corev1.Container{
 				Name:         "artifact-dest-mkdir-source-workspace-9l9zj",
-				Image:        "busybox",
+				Image:        "mirror.gcr.io/library/busybox",
 				Command:      []string{"mkdir", "-p", "/workspace/faraway-disk"},
 				VolumeMounts: nil,
 			}},
@@ -1554,12 +1554,12 @@ func TestInputOutputBucketResources(t *testing.T) {
 		wantSteps: []v1beta1.Step{
 			{Container: corev1.Container{
 				Name:    "create-dir-source-workspace-3-6nl7g",
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"mkdir", "-p", "/workspace/output/source-workspace-3"},
 			}},
 			{Container: corev1.Container{
 				Name:         "artifact-dest-mkdir-source-workspace-mssqb",
-				Image:        "busybox",
+				Image:        "mirror.gcr.io/library/busybox",
 				Command:      []string{"mkdir", "-p", "/workspace/faraway-disk"},
 				VolumeMounts: nil,
 			}},
@@ -1584,7 +1584,7 @@ func TestInputOutputBucketResources(t *testing.T) {
 			}},
 			{Container: corev1.Container{
 				Name:         "artifact-dest-mkdir-source-workspace-2-9l9zj",
-				Image:        "busybox",
+				Image:        "mirror.gcr.io/library/busybox",
 				VolumeMounts: nil,
 				Command:      []string{"mkdir", "-p", "/workspace/faraway-disk-2"},
 				Env:          nil,
@@ -1669,12 +1669,12 @@ func TestInputOutputBucketResources(t *testing.T) {
 		wantSteps: []v1beta1.Step{
 			{Container: corev1.Container{
 				Name:    "create-dir-source-workspace-2-mssqb",
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"mkdir", "-p", "/workspace/output/source-workspace-2"},
 			}},
 			{Container: corev1.Container{
 				Name:         "create-dir-source-workspace-9l9zj",
-				Image:        "busybox",
+				Image:        "mirror.gcr.io/library/busybox",
 				Command:      []string{"mkdir", "-p", "/workspace/output/source-workspace"},
 				VolumeMounts: nil,
 			}},
