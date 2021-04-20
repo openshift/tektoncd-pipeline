@@ -35,7 +35,7 @@ var images = pipeline.Images{
 	NopImage:                 "override-with-nop:latest",
 	GitImage:                 "override-with-git:latest",
 	KubeconfigWriterImage:    "override-with-kubeconfig-writer:latest",
-	ShellImage:               "busybox",
+	ShellImage:               "mirror.gcr.io/library/busybox",
 	GsutilImage:              "gcr.io/google.com/cloudsdktool/cloud-sdk",
 	PRImage:                  "override-with-pr:latest",
 	ImageDigestExporterImage: "override-with-imagedigest-exporter-image:latest",
@@ -109,7 +109,7 @@ func TestValidNewGCSResource(t *testing.T) {
 			SecretKey:  "secretKey",
 			FieldName:  "GOOGLE_APPLICATION_CREDENTIALS",
 		}},
-		ShellImage:  "busybox",
+		ShellImage:  "mirror.gcr.io/library/busybox",
 		GsutilImage: "gcr.io/google.com/cloudsdktool/cloud-sdk",
 	}
 
@@ -178,12 +178,12 @@ func TestGetInputSteps(t *testing.T) {
 				FieldName:  "GOOGLE_APPLICATION_CREDENTIALS",
 				SecretKey:  "key.json",
 			}},
-			ShellImage:  "busybox",
+			ShellImage:  "mirror.gcr.io/library/busybox",
 			GsutilImage: "gcr.io/google.com/cloudsdktool/cloud-sdk",
 		},
 		wantSteps: []v1beta1.Step{{Container: corev1.Container{
 			Name:    "create-dir-gcs-valid-9l9zj",
-			Image:   "busybox",
+			Image:   "mirror.gcr.io/library/busybox",
 			Command: []string{"mkdir", "-p", "/workspace"},
 		}}, {
 			Script: `#!/usr/bin/env bash
@@ -220,12 +220,12 @@ gsutil rsync -d -r gs://some-bucket /workspace
 				SecretName: "secretName",
 				FieldName:  "GOOGLE_APPLICATION_CREDENTIALS",
 			}},
-			ShellImage:  "busybox",
+			ShellImage:  "mirror.gcr.io/library/busybox",
 			GsutilImage: "gcr.io/google.com/cloudsdktool/cloud-sdk",
 		},
 		wantSteps: []v1beta1.Step{{Container: corev1.Container{
 			Name:    "create-dir-gcs-valid-mssqb",
-			Image:   "busybox",
+			Image:   "mirror.gcr.io/library/busybox",
 			Command: []string{"mkdir", "-p", "/workspace"},
 		}}, {
 			Script: `#!/usr/bin/env bash

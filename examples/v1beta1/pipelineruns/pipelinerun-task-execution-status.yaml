@@ -9,7 +9,7 @@ spec:
     - name: task1 # successful task
       taskSpec:
         steps:
-        - image: ubuntu
+        - image: public.ecr.aws/ubuntu/ubuntu:latest
           name: hello
           script: |
             echo "Hello World!"
@@ -20,7 +20,7 @@ spec:
           values: ["true"]
       taskSpec:
         steps:
-          - image: ubuntu
+          - image: public.ecr.aws/ubuntu/ubuntu:latest
             name: success
             script: |
               exit 0
