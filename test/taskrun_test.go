@@ -51,15 +51,15 @@ func TestTaskRunFailure(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: "failing-task", Namespace: namespace},
 		Spec: v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"/bin/sh"},
 				Args:    []string{"-c", "echo hello"},
 			}}, {Container: corev1.Container{
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"/bin/sh"},
 				Args:    []string{"-c", "exit 1"},
 			}}, {Container: corev1.Container{
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"/bin/sh"},
 				Args:    []string{"-c", "sleep 30s"},
 			}}},

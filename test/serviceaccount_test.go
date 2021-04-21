@@ -121,7 +121,7 @@ func TestPipelineRunWithServiceAccounts(t *testing.T) {
 				TaskSpec: &v1beta1.EmbeddedTask{TaskSpec: v1beta1.TaskSpec{
 					Steps: []v1beta1.Step{{
 						Container: corev1.Container{
-							Image: "ubuntu",
+							Image: "public.ecr.aws/ubuntu/ubuntu",
 						},
 						Script: `echo task1`,
 					}},
@@ -131,7 +131,7 @@ func TestPipelineRunWithServiceAccounts(t *testing.T) {
 				TaskSpec: &v1beta1.EmbeddedTask{TaskSpec: v1beta1.TaskSpec{
 					Steps: []v1beta1.Step{{
 						Container: corev1.Container{
-							Image: "ubuntu",
+							Image: "public.ecr.aws/ubuntu/ubuntu",
 						},
 						Script: `echo task2`,
 					}},
@@ -141,7 +141,7 @@ func TestPipelineRunWithServiceAccounts(t *testing.T) {
 				TaskSpec: &v1beta1.EmbeddedTask{TaskSpec: v1beta1.TaskSpec{
 					Steps: []v1beta1.Step{{
 						Container: corev1.Container{
-							Image: "ubuntu",
+							Image: "public.ecr.aws/ubuntu/ubuntu",
 						},
 						Script: `echo task3`,
 					}},
@@ -251,7 +251,7 @@ func TestPipelineRunWithServiceAccountNameAndTaskRunSpec(t *testing.T) {
 				TaskSpec: &v1beta1.EmbeddedTask{TaskSpec: v1beta1.TaskSpec{
 					Steps: []v1beta1.Step{{
 						Container: corev1.Container{
-							Image: "ubuntu",
+							Image: "public.ecr.aws/ubuntu/ubuntu",
 						},
 						Script: `echo task1`,
 					}},
