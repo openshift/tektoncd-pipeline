@@ -72,10 +72,10 @@ func TestSidecarTaskSupport(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: sidecarTaskName, Namespace: namespace},
 				Spec: v1beta1.TaskSpec{
 					Steps: []v1beta1.Step{{
-						Container: corev1.Container{Name: primaryContainerName, Image: "busybox", Command: test.stepCommand},
+						Container: corev1.Container{Name: primaryContainerName, Image: "mirror.gcr.io/library/busybox", Command: test.stepCommand},
 					}},
 					Sidecars: []v1beta1.Sidecar{{
-						Container: corev1.Container{Name: sidecarContainerName, Image: "busybox", Command: test.sidecarCommand},
+						Container: corev1.Container{Name: sidecarContainerName, Image: "mirror.gcr.io/library/busybox", Command: test.sidecarCommand},
 					}},
 				},
 			}

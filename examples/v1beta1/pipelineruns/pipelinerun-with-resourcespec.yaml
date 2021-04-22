@@ -12,7 +12,7 @@ spec:
         type: git
   steps:
     - name: list
-      image: ubuntu
+      image: public.ecr.aws/ubuntu/ubuntu:latest
       command:
         - bash
       args:
@@ -31,7 +31,7 @@ spec:
     - name: pipeline-git
       type: git
   check:
-    image: ubuntu
+    image: public.ecr.aws/ubuntu/ubuntu:latest
     command:
       - bash
     args:

@@ -5,7 +5,7 @@ metadata:
 spec:
   steps:
   - name: task-two-step-one
-    image: ubuntu
+    image: public.ecr.aws/ubuntu/ubuntu:latest
     command: ["/bin/bash"]
     args: ['-c', 'echo success']
 ---

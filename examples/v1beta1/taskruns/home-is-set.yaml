@@ -5,7 +5,7 @@ metadata:
 spec:
   taskSpec:
     steps:
-    - image: ubuntu
+    - image: public.ecr.aws/ubuntu/ubuntu:latest
       script: |
         #!/usr/bin/env bash
         [[ $HOME == /tekton/home ]]
