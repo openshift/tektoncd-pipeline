@@ -126,12 +126,12 @@ func getClusterResourceTask(namespace, name, configName string) *v1beta1.Task {
 			}},
 			Steps: []v1beta1.Step{{Container: corev1.Container{
 				Name:    "check-file-existence",
-				Image:   "ubuntu",
+				Image:   "public.ecr.aws/ubuntu/ubuntu",
 				Command: []string{"cat"},
 				Args:    []string{"$(resources.inputs.target-cluster.path)/kubeconfig"},
 			}}, {Container: corev1.Container{
 				Name:    "check-config-data",
-				Image:   "ubuntu",
+				Image:   "public.ecr.aws/ubuntu/ubuntu",
 				Command: []string{"cat"},
 				Args:    []string{"/config/test.data"},
 				VolumeMounts: []corev1.VolumeMount{{
@@ -140,7 +140,7 @@ func getClusterResourceTask(namespace, name, configName string) *v1beta1.Task {
 				}},
 			}}, {Container: corev1.Container{
 				Name:    "check-contents",
-				Image:   "ubuntu",
+				Image:   "public.ecr.aws/ubuntu/ubuntu",
 				Command: []string{"bash"},
 				Args:    []string{"-c", "cmp -b $(resources.inputs.target-cluster.path)/kubeconfig /config/test.data"},
 				VolumeMounts: []corev1.VolumeMount{{
