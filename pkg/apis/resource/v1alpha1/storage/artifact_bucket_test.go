@@ -42,7 +42,7 @@ var (
 			SecretName: secretName,
 			SecretKey:  "serviceaccount",
 		}},
-		ShellImage:  "busybox",
+		ShellImage:  "mirror.gcr.io/library/busybox",
 		GsutilImage: "gcr.io/google.com/cloudsdktool/cloud-sdk",
 	}
 )
@@ -52,7 +52,7 @@ func TestBucketGetCopyFromContainerSpec(t *testing.T) {
 
 	want := []v1alpha1.Step{{Container: corev1.Container{
 		Name:    "artifact-dest-mkdir-workspace-9l9zj",
-		Image:   "busybox",
+		Image:   "mirror.gcr.io/library/busybox",
 		Command: []string{"mkdir", "-p", "/workspace/destination"},
 	}}, {Container: corev1.Container{
 		Name:         "artifact-copy-from-workspace-mz4c7",
