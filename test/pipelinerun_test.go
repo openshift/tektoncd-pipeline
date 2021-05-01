@@ -142,7 +142,7 @@ func TestPipelineRun(t *testing.T) {
 				ObjectMeta: metav1.ObjectMeta{Name: getName(taskName, index), Namespace: namespace},
 				Spec: v1beta1.TaskSpec{
 					Steps: []v1beta1.Step{{Container: corev1.Container{
-						Image:   "ubuntu",
+						Image:   "public.ecr.aws/ubuntu/ubuntu",
 						Command: []string{"/bin/bash"},
 						Args:    []string{"-c", "echo hello, world"},
 					}}},
@@ -345,7 +345,7 @@ func TestPipelineRunPending(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: prName, Namespace: namespace},
 		Spec: v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
-				Image:   "ubuntu",
+				Image:   "public.ecr.aws/ubuntu/ubuntu",
 				Command: []string{"/bin/bash"},
 				Args:    []string{"-c", "echo hello, world"},
 			}}},
@@ -423,12 +423,12 @@ func getFanInFanOutTasks(namespace string) []*v1beta1.Task {
 			},
 			Steps: []v1beta1.Step{{Container: corev1.Container{
 				Name:    "write-data-task-0-step-0",
-				Image:   "ubuntu",
+				Image:   "public.ecr.aws/ubuntu/ubuntu",
 				Command: []string{"/bin/bash"},
 				Args:    []string{"-c", "echo stuff > $(resources.outputs.workspace.path)/stuff"},
 			}}, {Container: corev1.Container{
 				Name:    "write-data-task-0-step-1",
-				Image:   "ubuntu",
+				Image:   "public.ecr.aws/ubuntu/ubuntu",
 				Command: []string{"/bin/bash"},
 				Args:    []string{"-c", "echo other > $(resources.outputs.workspace.path)/other"},
 			}}},
@@ -442,12 +442,12 @@ func getFanInFanOutTasks(namespace string) []*v1beta1.Task {
 			},
 			Steps: []v1beta1.Step{{Container: corev1.Container{
 				Name:    "read-from-task-0",
-				Image:   "ubuntu",
+				Image:   "public.ecr.aws/ubuntu/ubuntu",
 				Command: []string{"/bin/bash"},
 				Args:    []string{"-c", "[[ stuff == $(cat $(inputs.resources.workspace.path)/stuff) ]]"},
 			}}, {Container: corev1.Container{
 				Name:    "write-data-task-1",
-				Image:   "ubuntu",
+				Image:   "public.ecr.aws/ubuntu/ubuntu",
 				Command: []string{"/bin/bash"},
 				Args:    []string{"-c", "echo something > $(outputs.resources.workspace.path)/something"},
 			}}},
@@ -461,12 +461,12 @@ func getFanInFanOutTasks(namespace string) []*v1beta1.Task {
 			},
 			Steps: []v1beta1.Step{{Container: corev1.Container{
 				Name:    "read-from-task-0",
-				Image:   "ubuntu",
+				Image:   "public.ecr.aws/ubuntu/ubuntu",
 				Command: []string{"/bin/bash"},
 				Args:    []string{"-c", "[[ other == $(cat $(inputs.resources.workspace.path)/other) ]]"},
 			}}, {Container: corev1.Container{
 				Name:    "write-data-task-1",
-				Image:   "ubuntu",
+				Image:   "public.ecr.aws/ubuntu/ubuntu",
 				Command: []string{"/bin/bash"},
 				Args:    []string{"-c", "echo else > $(outputs.resources.workspace.path)/else"},
 			}}},
@@ -483,12 +483,12 @@ func getFanInFanOutTasks(namespace string) []*v1beta1.Task {
 			},
 			Steps: []v1beta1.Step{{Container: corev1.Container{
 				Name:    "read-from-task-0",
-				Image:   "ubuntu",
+				Image:   "public.ecr.aws/ubuntu/ubuntu",
 				Command: []string{"/bin/bash"},
 				Args:    []string{"-c", "[[ something == $(cat $(inputs.resources.workspace.path)/something) ]]"},
 			}}, {Container: corev1.Container{
 				Name:    "read-from-task-1",
-				Image:   "ubuntu",
+				Image:   "public.ecr.aws/ubuntu/ubuntu",
 				Command: []string{"/bin/bash"},
 				Args:    []string{"-c", "[[ else == $(cat $(inputs.resources.workspace.path)/else) ]]"},
 			}}},
@@ -811,7 +811,7 @@ func getPipelineWithFailingCondition(suffix int, namespace string) *v1beta1.Pipe
 }
 
 func getFailingCondition() *v1alpha1.Condition {
-	return tbv1alpha1.Condition(cond1Name, tbv1alpha1.ConditionSpec(tbv1alpha1.ConditionSpecCheck("", "ubuntu",
+	return tbv1alpha1.Condition(cond1Name, tbv1alpha1.ConditionSpec(tbv1alpha1.ConditionSpecCheck("", "public.ecr.aws/ubuntu/ubuntu",
 		tb.Command("/bin/bash"), tb.Args("exit 1"))))
 }
 
