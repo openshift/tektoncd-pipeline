@@ -55,7 +55,7 @@ func TestDuplicatePodTaskRun(t *testing.T) {
 			Spec: v1beta1.TaskRunSpec{
 				TaskSpec: &v1beta1.TaskSpec{
 					Steps: []v1beta1.Step{{Container: corev1.Container{
-						Image:   "busybox",
+						Image:   "mirror.gcr.io/library/busybox",
 						Command: []string{"/bin/echo"},
 						Args:    []string{"simple"},
 					}}},

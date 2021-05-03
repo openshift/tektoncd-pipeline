@@ -71,7 +71,7 @@ func TestCustomTask(t *testing.T) {
 								Name: "input-result-from-custom-task", Type: v1beta1.ParamTypeString,
 							}},
 							Steps: []v1beta1.Step{{Container: corev1.Container{
-								Image:   "ubuntu",
+								Image:   "public.ecr.aws/ubuntu/ubuntu",
 								Command: []string{"/bin/bash"},
 								Args:    []string{"-c", "echo $(input-result-from-custom-task)"},
 							}}},
