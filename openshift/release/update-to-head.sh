@@ -41,6 +41,13 @@ find . -type f -name '*.go' -o -name '*.yaml' | \
 
 git commit -a -m ":robot: Switching image from docker.io to public cloud providers registry"
 
+# set feature-flags to preserve defaults in GA release 1.4.x
+# ref: https://github.com/tektoncd/pipeline/pull/3878
+sed -e 's/\(disable-home-env-overwrite\).*/\1: false/' \
+    -e 's/\(disable-working-directory-overwrite\).*/\1: false/' config/config-feature-flags.yaml
+
+git commit -a -m ":robot: Setting feature flags as per Red Hat OpenShift Pipelines defaults"
+
 git push -f ${OPENSHIFT_REMOTE} release-next
 
 # Trigger CI
