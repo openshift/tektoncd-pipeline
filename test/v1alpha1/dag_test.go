@@ -72,10 +72,10 @@ func TestDAGPipelineRun(t *testing.T) {
 				Description: "The text that should be echoed",
 			}},
 			Steps: []v1alpha1.Step{{
-				Container: corev1.Container{Image: "busybox"},
+				Container: corev1.Container{Image: "mirror.gcr.io/library/busybox"},
 				Script:    "echo $(params.text)",
 			}, {
-				Container: corev1.Container{Image: "busybox"},
+				Container: corev1.Container{Image: "mirror.gcr.io/library/busybox"},
 				Script:    "ln -s $(resources.inputs.repo.path) $(resources.outputs.repo.path)",
 			}},
 		}},

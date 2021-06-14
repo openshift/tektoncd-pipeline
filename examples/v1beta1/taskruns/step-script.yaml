@@ -10,10 +10,10 @@ spec:
 
     steps:
     - name: noshebang
-      image: ubuntu
+      image: public.ecr.aws/ubuntu/ubuntu:latest
       script: echo "no shebang"
     - name: bash
-      image: ubuntu
+      image: public.ecr.aws/ubuntu/ubuntu:latest
       env:
       - name: FOO
         value: foooooooo
@@ -33,7 +33,7 @@ spec:
         done
 
     - name: place-file
-      image: ubuntu
+      image: public.ecr.aws/ubuntu/ubuntu:latest
       securityContext:
         runAsUser: 8000
       script: |
@@ -41,13 +41,13 @@ spec:
         echo "echo Hello from script file" > /workspace/hello
         chmod +x /workspace/hello
     - name: run-file
-      image: ubuntu
+      image: public.ecr.aws/ubuntu/ubuntu:latest
       script: |
         #!/usr/bin/env bash
         /workspace/hello
 
     - name: contains-eof
-      image: ubuntu
+      image: public.ecr.aws/ubuntu/ubuntu:latest
       securityContext:
         runAsUser: 16000
       workingDir: /workspace
@@ -89,7 +89,7 @@ spec:
 
     # Test that args are allowed and passed to the script as expected.
     - name: args-allowed
-      image: ubuntu
+      image: public.ecr.aws/ubuntu/ubuntu:latest
       args: ['hello', 'world']
       script: |
         #!/usr/bin/env bash
