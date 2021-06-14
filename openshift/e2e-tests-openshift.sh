@@ -53,14 +53,19 @@ function create_test_namespace() {
 
 function run_go_e2e_tests() {
   header "Running Go e2e tests"
+  breakPoint e2e-1
   go test -v -failfast -count=1 -tags=e2e -ldflags '-X github.com/tektoncd/pipeline/test.missingKoFatal=false' ./test -skipRootUserTests=true -timeout=20m --kubeconfig $KUBECONFIG || return 1
+  breakPoint e2e-2
   go test -v -failfast -count=1 -tags=e2e -ldflags '-X github.com/tektoncd/pipeline/test/v1alpha1.missingKoFatal=false' ./test/v1alpha1 -skipRootUserTests=true -timeout=20m --kubeconfig $KUBECONFIG || return 1
+  breakPoint e2e-end
 }
 
 function run_yaml_e2e_tests() {
+  breakPoint before-yaml-alpha
   run_yaml_e2e_tests_alpha || return 1
-
+  breakPoint before-yaml-beta
   run_yaml_e2e_tests_beta || return 1
+  breakPoint before-yaml-end
 }
 
 function run_yaml_e2e_tests_alpha() {
@@ -223,11 +228,9 @@ function teardown() {
 #    ```
 function breakPoint() {
   waitFileName=${1:-waitFile}
+  echo \*\* run \`touch ${waitFileName}\` to resume \*\*
   while [[ ! -f ${waitFileName} ]]; do
     sleep 10;
-    echo \*\* --------------------------------------- \*\*
-    echo \*\* breakPoint                              \*\*;
-    echo \*\* run \`touch ${waitFileName}\` to resume \*\*
   done
 }
 
@@ -238,13 +241,19 @@ create_test_namespace
 ## use the deployed controller/webhook from there.
 [[ -z ${E2E_DEBUG} ]] && install_tekton_pipeline
 
+breakPoint after-install
+
 failed=0
 
 run_go_e2e_tests || failed=1
 
 run_yaml_e2e_tests || failed=1
 
+breakPoint before-dump-cluster-state
+
 ((failed)) && dump_cluster_state
+
+breakPoint before-teardown
 
 teardown
 
