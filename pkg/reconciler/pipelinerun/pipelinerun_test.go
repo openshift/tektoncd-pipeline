@@ -74,7 +74,7 @@ var (
 		NopImage:                 "override-with-nop:latest",
 		GitImage:                 "override-with-git:latest",
 		KubeconfigWriterImage:    "override-with-kubeconfig-writer:latest",
-		ShellImage:               "busybox",
+		ShellImage:               "mirror.gcr.io/library/busybox",
 		GsutilImage:              "gcr.io/google.com/cloudsdktool/cloud-sdk",
 		PRImage:                  "override-with-pr:latest",
 		ImageDigestExporterImage: "override-with-imagedigest-exporter-image:latest",
