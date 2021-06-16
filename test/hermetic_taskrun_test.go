@@ -98,7 +98,7 @@ func taskRun(name, namespace, executionMode string) *v1beta1.TaskRun {
 					{
 						Container: corev1.Container{
 							Name:  "access-network",
-							Image: "ubuntu",
+							Image: "public.ecr.aws/ubuntu/ubuntu",
 						},
 						Script: `#!/bin/bash
 set -ex
