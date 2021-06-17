@@ -64,7 +64,7 @@ git push -f ${OPENSHIFT_REMOTE} release-next-ci
 if hash hub 2>/dev/null; then
    # Test if there is already a sync PR in 
    COUNT=$(hub api -H "Accept: application/vnd.github.v3+json" repos/openshift/${REPO_NAME}/pulls --flat \
-    | grep -c ":robot: Triggering CI on branch 'release-next' after synching to upstream/main") || true
+    | grep -c ":robot: Triggering CI on branch 'release-next' after synching to upstream/[master|main]") || true
    if [ "$COUNT" = "0" ]; then
       hub pull-request --no-edit -l "kind/sync-fork-to-upstream" -b openshift/${REPO_NAME}:release-next -h openshift/${REPO_NAME}:release-next-ci
    fi
