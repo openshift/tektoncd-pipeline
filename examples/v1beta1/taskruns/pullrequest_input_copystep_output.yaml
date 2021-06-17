@@ -25,7 +25,7 @@ spec:
           type: pullRequest
     steps:
     - name: copy-pr-to-output
-      image: busybox
+      image: mirror.gcr.io/library/busybox
       script: |
         #!/bin/sh
         mkdir -p $(outputs.resources.pr.path)
