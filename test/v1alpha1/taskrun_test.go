@@ -46,13 +46,13 @@ func TestTaskRunFailure(t *testing.T) {
 
 	t.Logf("Creating Task and TaskRun in namespace %s", namespace)
 	task := tb.Task("failing-task", tb.TaskSpec(
-		tb.Step("busybox",
+		tb.Step("mirror.gcr.io/library/busybox",
 			tb.StepCommand("/bin/sh"), tb.StepArgs("-c", "echo hello"),
 		),
-		tb.Step("busybox",
+		tb.Step("mirror.gcr.io/library/busybox",
 			tb.StepCommand("/bin/sh"), tb.StepArgs("-c", "exit 1"),
 		),
-		tb.Step("busybox",
+		tb.Step("mirror.gcr.io/library/busybox",
 			tb.StepCommand("/bin/sh"), tb.StepArgs("-c", "sleep 30s"),
 		),
 	))
