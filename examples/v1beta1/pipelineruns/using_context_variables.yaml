@@ -24,19 +24,19 @@ spec:
         - name: pipelineRun-name
         - name: pipelineTask-retries
         steps:
-        - image: ubuntu
+        - image: public.ecr.aws/ubuntu/ubuntu:latest
           name: print-uid
           script: |
             echo "TaskRun UID: $(context.taskRun.uid)"
             echo "PipelineRun UID from params: $(params.pipeline-uid)"
-        - image: ubuntu
+        - image: public.ecr.aws/ubuntu/ubuntu:latest
           name: print-names
           script: |
             echo "Task name: $(context.task.name)"
             echo "TaskRun name: $(context.taskRun.name)"
             echo "Pipeline name from params: $(params.pipeline-name)"
             echo "PipelineRun name from params: $(params.pipelineRun-name)"
-        - image: ubuntu
+        - image: public.ecr.aws/ubuntu/ubuntu:latest
           name: print-retries
           script: |
             echo "PipelineTask retries from params: $(params.pipelineTask-retries)"
