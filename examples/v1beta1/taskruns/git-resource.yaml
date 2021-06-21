@@ -9,7 +9,7 @@ spec:
       - name: skaffold
         type: git
     steps:
-    - image: ubuntu
+    - image: public.ecr.aws/ubuntu/ubuntu:latest
       workingDir: /workspace
       script: cat skaffold/README.md
   resources:
@@ -34,7 +34,7 @@ spec:
       - name: skaffold
         type: git
     steps:
-    - image: ubuntu
+    - image: public.ecr.aws/ubuntu/ubuntu:latest
       workingDir: /workspace
       script: cat skaffold/README.md
   resources:
@@ -59,7 +59,7 @@ spec:
       - name: skaffold
         type: git
     steps:
-    - image: ubuntu
+    - image: public.ecr.aws/ubuntu/ubuntu:latest
       workingDir: /workspace
       script: cat skaffold/README.md
   resources:

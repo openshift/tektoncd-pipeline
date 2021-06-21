@@ -46,7 +46,7 @@ metadata:
 spec:
   steps:
   - name: foo
-    image: busybox
+    image: mirror.gcr.io/library/busybox
     command: ['ls', '-la']`)
 	if _, err := c.TaskClient.Create(ctx, task, metav1.CreateOptions{}); err != nil {
 		t.Fatalf("Failed to create Task: %s", err)
