@@ -52,7 +52,7 @@ func TestPipelineRunTimeout(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: helpers.ObjectNameForTest(t), Namespace: namespace},
 		Spec: v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"/bin/sh"},
 				Args:    []string{"-c", "sleep 10"},
 			}}},
@@ -188,21 +188,21 @@ func TestStepTimeout(t *testing.T) {
 				Steps: []v1beta1.Step{{
 					Container: corev1.Container{
 						Name:  "no-timeout",
-						Image: "busybox",
+						Image: "mirror.gcr.io/library/busybox",
 					},
 					Script:  "sleep 1",
 					Timeout: &metav1.Duration{Duration: 2 * time.Second},
 				}, {
 					Container: corev1.Container{
 						Name:  "timeout",
-						Image: "busybox",
+						Image: "mirror.gcr.io/library/busybox",
 					},
 					Script:  "sleep 1",
 					Timeout: &metav1.Duration{Duration: time.Millisecond},
 				}, {
 					Container: corev1.Container{
 						Name:  "canceled",
-						Image: "busybox",
+						Image: "mirror.gcr.io/library/busybox",
 					},
 					Script: "sleep 1",
 				}},
@@ -254,7 +254,7 @@ func TestTaskRunTimeout(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: helpers.ObjectNameForTest(t), Namespace: namespace},
 		Spec: v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"/bin/sh"},
 				Args:    []string{"-c", "sleep 3000"},
 			}}},
@@ -310,7 +310,7 @@ func TestPipelineTaskTimeout(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: helpers.ObjectNameForTest(t), Namespace: namespace},
 		Spec: v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"sleep"},
 				Args:    []string{"1s"},
 			}}},
@@ -320,7 +320,7 @@ func TestPipelineTaskTimeout(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: helpers.ObjectNameForTest(t), Namespace: namespace},
 		Spec: v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"sleep"},
 				Args:    []string{"10s"},
 			}}},
@@ -454,7 +454,7 @@ func TestPipelineRunTasksTimeout(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: helpers.ObjectNameForTest(t), Namespace: namespace},
 		Spec: v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"/bin/sh"},
 				Args:    []string{"-c", "sleep 30"},
 			}}},
@@ -469,7 +469,7 @@ func TestPipelineRunTasksTimeout(t *testing.T) {
 		ObjectMeta: metav1.ObjectMeta{Name: helpers.ObjectNameForTest(t), Namespace: namespace},
 		Spec: v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"/bin/sh"},
 				Args:    []string{"-c", "sleep 1"},
 			}}},
