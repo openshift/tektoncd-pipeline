@@ -48,6 +48,13 @@ sed -i -e 's/\(disable-home-env-overwrite\).*/\1: "false"/' \
 
 git commit -a -m ":robot: Setting feature flags as per Red Hat OpenShift Pipelines defaults"
 
+# add release.yaml from previous successful nightly build to resynced release-next as a backup
+git fetch ${OPENSHIFT_REMOTE} release-next
+git checkout FETCH_HEAD openshift/release/tektoncd-pipeline-nightly.yaml
+
+git add openshift/release/tektoncd-pipeline-nightly.yaml
+git commit -m ":robot: Add previous days release.yaml as back up"
+
 git push -f ${OPENSHIFT_REMOTE} release-next
 
 # Trigger CI
