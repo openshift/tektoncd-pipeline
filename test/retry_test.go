@@ -54,7 +54,7 @@ func TestTaskRunRetry(t *testing.T) {
 					Name: "retry-me",
 					TaskSpec: &v1beta1.EmbeddedTask{TaskSpec: v1beta1.TaskSpec{
 						Steps: []v1beta1.Step{{
-							Container: corev1.Container{Image: "busybox"},
+							Container: corev1.Container{Image: "mirror.gcr.io/library/busybox"},
 							Script:    "exit 1",
 						}},
 					}},
