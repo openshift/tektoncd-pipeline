@@ -52,13 +52,13 @@ func TestEntrypointRunningStepsInOrder(t *testing.T) {
 			TaskSpec: &v1alpha1.TaskSpec{TaskSpec: v1beta1.TaskSpec{
 				Steps: []v1beta1.Step{{
 					Container: corev1.Container{
-						Image:      "busybox",
+						Image:      "mirror.gcr.io/library/busybox",
 						WorkingDir: "/workspace",
 					},
 					Script: "sleep 3 && touch foo",
 				}, {
 					Container: corev1.Container{
-						Image:      "ubuntu",
+						Image:      "public.ecr.aws/ubuntu/ubuntu",
 						WorkingDir: "/workspace",
 					},
 					Script: "ls foo",
