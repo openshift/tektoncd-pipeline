@@ -35,7 +35,7 @@ spec:
         type: git
   steps:
     - name: write-new-stuff
-      image: ubuntu
+      image: public.ecr.aws/ubuntu/ubuntu:latest
       script: 'touch $(outputs.resources.workspace.path)/README.md'
 ---
 apiVersion: tekton.dev/v1alpha1
@@ -45,7 +45,7 @@ metadata:
 spec:
   steps:
     - name: echo
-      image: ubuntu
+      image: public.ecr.aws/ubuntu/ubuntu:latest
       script: 'echo hello'
 ---
 apiVersion: tekton.dev/v1alpha1
