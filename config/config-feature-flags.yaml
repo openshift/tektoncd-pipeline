@@ -35,13 +35,13 @@ data:
   #
   # See https://github.com/tektoncd/pipeline/issues/2013 for more
   # info.
-  disable-home-env-overwrite: "true"
+  disable-home-env-overwrite: "false"
   # Setting this flag to "false" will allow Tekton to override your
   # Task container's working directory.
   #
   # See https://github.com/tektoncd/pipeline/issues/1836 for more
   # info.
-  disable-working-directory-overwrite: "true"
+  disable-working-directory-overwrite: "false"
   # Setting this flag to "true" will prevent Tekton scanning attached
   # service accounts and injecting any credentials it finds into your
   # Steps.
