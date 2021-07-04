@@ -42,7 +42,7 @@ func TestTaskRunPipelineRunStatus(t *testing.T) {
 
 	t.Logf("Creating Task and TaskRun in namespace %s", namespace)
 	task := tb.Task("banana", tb.TaskSpec(
-		tb.Step("busybox", tb.StepCommand("ls", "-la")),
+		tb.Step("mirror.gcr.io/library/busybox", tb.StepCommand("ls", "-la")),
 	))
 	if _, err := c.TaskClient.Create(ctx, task, metav1.CreateOptions{}); err != nil {
 		t.Fatalf("Failed to create Task: %s", err)

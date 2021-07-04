@@ -32,6 +32,6 @@ spec:
       - retry-me
       taskSpec:
         steps:
-        - image: busybox
+        - image: mirror.gcr.io/library/busybox
           script: |
             echo "hello world"
