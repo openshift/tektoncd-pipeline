@@ -33,7 +33,7 @@
 // calculate the sha256 of the manifest returned by the registry and error out
 // if it doesn't match what we asked for.
 //
-// For defaulting, we interpret "ubuntu" as
+// For defaulting, we interpret "public.ecr.aws/ubuntu/ubuntu" as
 // "index.docker.io/library/ubuntu:latest" because we add the missing repo
 // "library", the missing registry "index.docker.io", and the missing tag
 // "latest". To disable this defaulting, use the StrictValidation option. This
