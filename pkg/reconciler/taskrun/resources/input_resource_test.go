@@ -39,7 +39,7 @@ var (
 		NopImage:                 "override-with-nop:latest",
 		GitImage:                 "override-with-git:latest",
 		KubeconfigWriterImage:    "override-with-kubeconfig-writer:latest",
-		ShellImage:               "busybox",
+		ShellImage:               "mirror.gcr.io/library/busybox",
 		GsutilImage:              "gcr.io/google.com/cloudsdktool/cloud-sdk",
 		PRImage:                  "override-with-pr:latest",
 		ImageDigestExporterImage: "override-with-imagedigest-exporter-image:latest",
@@ -585,11 +585,11 @@ func TestAddInputResourceToTask(t *testing.T) {
 		want: &v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
 				Name:    "create-dir-gitspace-mz4c7",
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"mkdir", "-p", "/workspace/gitspace"},
 			}}, {Container: corev1.Container{
 				Name:         "source-copy-gitspace-9l9zj",
-				Image:        "busybox",
+				Image:        "mirror.gcr.io/library/busybox",
 				Command:      []string{"cp", "-r", "prev-task-path/.", "/workspace/gitspace"},
 				VolumeMounts: []corev1.VolumeMount{{MountPath: "/pvc", Name: "pipelinerun-pvc"}},
 				Env:          []corev1.EnvVar{{Name: "TEKTON_RESOURCE_NAME", Value: "gitspace"}},
@@ -670,7 +670,7 @@ func TestAddInputResourceToTask(t *testing.T) {
 		want: &v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
 				Name:    "create-dir-storage1-9l9zj",
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"mkdir", "-p", "/workspace/gcs-dir"},
 			}}, {
 				Script: `#!/usr/bin/env bash
@@ -723,11 +723,11 @@ gsutil cp gs://fake-bucket/rules.zip /workspace/gcs-dir
 		want: &v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
 				Name:    "create-dir-workspace-mz4c7",
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"mkdir", "-p", "/workspace/gcs-dir"},
 			}}, {Container: corev1.Container{
 				Name:         "source-copy-workspace-9l9zj",
-				Image:        "busybox",
+				Image:        "mirror.gcr.io/library/busybox",
 				Command:      []string{"cp", "-r", "prev-task-path/.", "/workspace/gcs-dir"},
 				VolumeMounts: []corev1.VolumeMount{{MountPath: "/pvc", Name: "pipelinerun-pvc"}},
 				Env: []corev1.EnvVar{{
@@ -1075,7 +1075,7 @@ func TestStorageInputResource(t *testing.T) {
 		want: &v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
 				Name:    "create-dir-gcs-input-resource-9l9zj",
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"mkdir", "-p", "/workspace/gcs-input-resource"},
 			}}, {
 				Script: `#!/usr/bin/env bash
@@ -1146,7 +1146,7 @@ gsutil cp gs://fake-bucket/rules.zip /workspace/gcs-input-resource
 		want: &v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
 				Name:    "create-dir-storage-gcs-keys-9l9zj",
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"mkdir", "-p", "/workspace/gcs-input-resource"},
 			}}, {
 				Script: `#!/usr/bin/env bash
@@ -1310,7 +1310,7 @@ func TestAddStepsToTaskWithBucketFromConfigMap(t *testing.T) {
 		want: &v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
 				Name:    "artifact-dest-mkdir-gitspace-9l9zj",
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"mkdir", "-p", "/workspace/gitspace"},
 			}}, {Container: corev1.Container{
 				Name:         "artifact-copy-from-gitspace-mz4c7",
@@ -1354,7 +1354,7 @@ func TestAddStepsToTaskWithBucketFromConfigMap(t *testing.T) {
 		want: &v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
 				Name:    "artifact-dest-mkdir-workspace-mssqb",
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"mkdir", "-p", "/workspace/gcs-dir"},
 			}}, {Container: corev1.Container{
 				Name:         "artifact-copy-from-workspace-78c5n",
@@ -1406,7 +1406,7 @@ func TestAddStepsToTaskWithBucketFromConfigMap(t *testing.T) {
 		want: &v1beta1.TaskSpec{
 			Steps: []v1beta1.Step{{Container: corev1.Container{
 				Name:    "artifact-dest-mkdir-workspace-vr6ds",
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"mkdir", "-p", "/workspace/gcs-dir"},
 			}}, {Container: corev1.Container{
 				Name:         "artifact-copy-from-workspace-l22wn",
@@ -1417,7 +1417,7 @@ func TestAddStepsToTaskWithBucketFromConfigMap(t *testing.T) {
 				VolumeMounts: gcsVolumeMounts,
 			}}, {Container: corev1.Container{
 				Name:    "artifact-dest-mkdir-workspace2-6nl7g",
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: []string{"mkdir", "-p", "/workspace/gcs-dir"},
 			}}, {Container: corev1.Container{
 				Name:         "artifact-copy-from-workspace2-j2tds",
