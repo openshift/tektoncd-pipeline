@@ -83,7 +83,7 @@ var (
 		NopImage:                 "override-with-nop:latest",
 		GitImage:                 "override-with-git:latest",
 		KubeconfigWriterImage:    "override-with-kubeconfig-writer:latest",
-		ShellImage:               "busybox",
+		ShellImage:               "mirror.gcr.io/library/busybox",
 		GsutilImage:              "gcr.io/google.com/cloudsdktool/cloud-sdk",
 		PRImage:                  "override-with-pr:latest",
 		ImageDigestExporterImage: "override-with-imagedigest-exporter-image:latest",
@@ -909,7 +909,7 @@ func TestReconcile(t *testing.T) {
 		tb.TaskRunTaskSpec(
 			tb.TaskResources(
 				tb.TaskResourcesInput("workspace", resourcev1alpha1.PipelineResourceTypeGit)),
-			tb.Step("ubuntu", tb.StepName("mystep"), tb.StepCommand("/mycmd")),
+			tb.Step("public.ecr.aws/ubuntu/ubuntu", tb.StepName("mystep"), tb.StepCommand("/mycmd")),
 		),
 	))
 
@@ -1129,7 +1129,7 @@ func TestReconcile(t *testing.T) {
 				),
 				tb.PodRestartPolicy(corev1.RestartPolicyNever),
 				getPlaceToolsInitContainer(),
-				tb.PodContainer("step-create-dir-myimage-mssqb", "busybox",
+				tb.PodContainer("step-create-dir-myimage-mssqb", "mirror.gcr.io/library/busybox",
 					tb.Command("/tekton/tools/entrypoint"),
 					tb.Args("-wait_file",
 						"/tekton/downward/ready",
@@ -1370,7 +1370,7 @@ func TestReconcile(t *testing.T) {
 					tb.VolumeMount("tekton-internal-results", "/tekton/results"),
 					tb.TerminationMessagePath("/tekton/termination"),
 				),
-				tb.PodContainer("step-mystep", "ubuntu",
+				tb.PodContainer("step-mystep", "public.ecr.aws/ubuntu/ubuntu",
 					tb.Command(entrypointLocation),
 					tb.Args("-wait_file", "/tekton/tools/0", "-post_file", "/tekton/tools/1", "-termination_path",
 						"/tekton/termination", "-entrypoint", "/mycmd", "--"),

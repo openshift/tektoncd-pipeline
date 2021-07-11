@@ -816,7 +816,7 @@ func getCondition(t *testing.T, namespace string) *v1alpha1.Condition {
 		ObjectMeta: metav1.ObjectMeta{Name: helpers.ObjectNameForTest(t), Namespace: namespace},
 		Spec: v1alpha1.ConditionSpec{
 			Check: v1alpha1.Step{
-				Container: corev1.Container{Image: "ubuntu"},
+				Container: corev1.Container{Image: "public.ecr.aws/ubuntu/ubuntu"},
 				Script:    "exit 1",
 			},
 		},
