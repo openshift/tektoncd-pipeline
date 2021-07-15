@@ -70,7 +70,7 @@ func TestTaskRunPipelineRunCancel(t *testing.T) {
 								TaskSpec: &v1beta1.EmbeddedTask{TaskSpec: v1beta1.TaskSpec{
 									Steps: []v1beta1.Step{{
 										Container: corev1.Container{
-											Image: "busybox",
+											Image: "mirror.gcr.io/library/busybox",
 										},
 										Script: "sleep 5000",
 									}},
