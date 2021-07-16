@@ -78,11 +78,11 @@ func getEmbeddedTask(namespace string, args []string) *v1beta1.Task {
 				}}},
 			},
 			Steps: []v1beta1.Step{{Container: corev1.Container{
-				Image:   "ubuntu",
+				Image:   "public.ecr.aws/ubuntu/ubuntu",
 				Command: []string{"/bin/bash"},
 				Args:    []string{"-c", "cat /workspace/docs/LICENSE"},
 			}}, {Container: corev1.Container{
-				Image:   "busybox",
+				Image:   "mirror.gcr.io/library/busybox",
 				Command: args,
 			}}},
 		},
